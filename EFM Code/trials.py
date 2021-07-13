@@ -15,6 +15,25 @@ iz = p3ht.iz()
 ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
+
+#%%Plotting line graphs
+x = list(range(1,257))
+y1 = iz[155]
+main.plt.plot(x,y1) # plot pixel 155 row
+main.plt.show()
+y2 = iz[:,155]
+main.plt.plot(x,y2) # plot pixel 155 column
+main.plt.show()
+#%% Normalise to between 0 and 1
+#Its also possible to give a Gaussian Distrubution if that's helpful 
+iz = p3ht.iz()
+print('shape:',iz.shape)
+print('Data Type: %s' % iz.dtype)
+print('Min: %.3f, Max: %.3f' % (iz.min(), iz.max()))
+iz = iz.astype('float32')
+iz /= 255.0
+print('Min: %.3f, Max: %.3f' % (iz.min(), iz.max()))
+print(iz)
 #%% Invert image 
 vai = main.np.invert(va)
 imagevai = main.Image.fromarray(vai)

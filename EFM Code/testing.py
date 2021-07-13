@@ -20,7 +20,7 @@ iz = p3ht.iz()
 ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
-print(iz) #if after bearray() should be array (256,256) of greyscale pixels ranging between 1 and 155
+print(iz) #if after bearray() should be array (256,256) of greyscale pixels ranging between 1 and 255
 print(type(iz)) #if after bearray() should be <class 'numpy.ndarray'>
 #%% Testing specific function - don't run directly after above as bug since cannot call bearray then read
 iz = p3ht.iz()
