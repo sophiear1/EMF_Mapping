@@ -7,6 +7,8 @@ Created on Tue Jul 6 11:52:40 2021
 #Testing ideas
 
 #%%
+import gwyfile
+#%%
 import main 
 p3ht = main.molecule(iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff', ia = 'P3HT 58k 11 5um 0V_190208_EFM Amplitude_Forward_001.tiff', vz = 'P3HT 58k 11 5um EFM 2V_190208_Z Height_Forward_003.tiff', va = 'P3HT 58k 11 5um EFM 2V_190208_EFM Amplitude_Forward_003.tiff')
 p3ht.read()
@@ -26,6 +28,7 @@ main.plt.plot(x,y2) # plot pixel 155 column
 main.plt.show()
 #%% Normalise to between 0 and 1
 #Its also possible to give a Gaussian Distrubution if that's helpful 
+#https://machinelearningmastery.com/how-to-manually-scale-image-pixel-data-for-deep-learning/
 iz = p3ht.iz()
 print('shape:',iz.shape)
 print('Data Type: %s' % iz.dtype)

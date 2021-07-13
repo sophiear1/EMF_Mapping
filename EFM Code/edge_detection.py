@@ -16,12 +16,14 @@ vz = p3ht.vz()
 va = p3ht.va()
 
 #%%Edge enhancement using Pillow
+#https://pythontic.com/image-processing/pillow/edge-enhancement-filter
+#https://pythontic.com/image-processing/pillow/edge-detection
 from PIL import Image
 from PIL import ImageFilter
 import skimage
 import skimage.feature
 import skimage.viewer
-imageObject = Image.open(va)
+imageObject = Image.open(vz)
 imageObject = imageObject.convert('RGB') # need to convert toe RGB file for enhancement but I think this might make it harder to find edges so defeats the point of the enhancement
 # Apply edge enhancement filter
 edgeEnhanced = imageObject.filter(ImageFilter.EDGE_ENHANCE)
@@ -39,7 +41,9 @@ moreEdgeEnhanced.save('Edge_enhanced_rgb.tiff')
 #plus only opens one at a time 
 
 """
-from https://datacarpentry.org/image-processing/08-edge-detection/
+https://datacarpentry.org/image-processing/08-edge-detection/
+https://towardsdatascience.com/canny-edge-detection-step-by-step-in-python-computer-vision-b49c3a2d8123
+https://github.com/FienSoP/canny_edge_detector
  * Python script to demonstrate Canny edge detection
  * with sliders to adjust the thresholds.
  *
@@ -72,3 +76,27 @@ canny_plugin += skimage.viewer.widgets.Slider(
 # add the plugin to the viewer and show the window
 viewer += canny_plugin
 viewer.show()
+#%%Sections https://www.youtube.com/watch?v=d1CIV9irQAY
+import numpy as np
+import matplotlib.pyplot as plt
+
+import skimage.data as data
+import skimage.segmentation as seg
+from skimage import filters
+from skimage import draw
+from skimage import color
+from skimage import exposure
+
+def image_show(image, nrows=1, ncols=1, cmap='gray', **kwargs):
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 16))
+    ax.imshow(image, cmap='gray')
+    ax.axis('off')
+    return fig, ax
+
+filename = iz
+image = skimage.io.imread(fname=filename, as_gray=True)
+image_show(image)
+threshold = filters.threshold_sauvola(image)
+image_show(image > threshold)
+#%%Flood Fill
+
