@@ -11,6 +11,8 @@ p3ht = main.molecule(iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff',
 #%% Read and be array for all 4 files (should work with either hashed out)
 p3ht.read()
 p3ht.bearray()
+#%%
+p3ht.image()
 print(p3ht) #should be <main.molecule object at ..location...>
 print(type(p3ht)) #should be <class 'main.molecule'>
 #%% Fetching individual files 
@@ -33,3 +35,14 @@ image_from_iz = p3ht.image(specific = iz)
 image_from_array = p3ht.image(specific = array_from_iz)
 image_from_read = p3ht.image(specific = read_iz)
 #will automatically open the 3 images, which should all be the same 
+#%% Testing inversion
+p3ht.bearray()
+p3ht.invert()
+p3ht.image()
+#%% Develop so can specify more than one? + Bug only works after inital load in of molecule
+vz = p3ht.iz()
+va = p3ht.va()
+array_va = p3ht.bearray(specific = va)
+invert_va = p3ht.invert(specific = array_va)
+image_va = p3ht.image(specific = invert_va)
+image_vz = p3ht.image(specific = vz)

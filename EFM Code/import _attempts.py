@@ -23,7 +23,6 @@ print(practise_data_2.columns[2])
 #%%Import tiff file with PIL Image
 from PIL import Image
 import numpy as np
-
 im = Image.open('P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff')
 im.show()
 imarray = np.array(im)

@@ -124,4 +124,18 @@ class molecule:
             image.show()
             return image
     
-    #def invert(self, )
+    def invert(self, specific = None):
+        """ Inverts the array 
+        
+        Parameters
+        specific : numpy.ndarray
+            If None (defalut), will invert both EFM arrays
+            If not None, will invert specified array
+        """
+        if specific is None:
+            self.__ia = np.invert(self.__ia)
+            self.__va = np.invert(self.__va)
+            return self.__ia, self.__va
+        else:
+            inversion = np.invert(specific)
+            return inversion
