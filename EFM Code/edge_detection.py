@@ -15,8 +15,29 @@ ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
 
+#%%Edge enhancement using Pillow
+from PIL import Image
+from PIL import ImageFilter
+import skimage
+import skimage.feature
+import skimage.viewer
+imageObject = Image.open(va)
+imageObject = imageObject.convert('RGB')
+# Apply edge enhancement filter
+edgeEnahnced = imageObject.filter(ImageFilter.EDGE_ENHANCE)
+# Apply increased edge enhancement filter
+moreEdgeEnahnced = imageObject.filter(ImageFilter.EDGE_ENHANCE_MORE)
+# Show original image - before applying edge enhancement filters
+imageObject.show() 
+# Show image - after applying edge enhancement filter
+edgeEnahnced.show()
+# Show image - after applying increased edge enhancement filter
+moreEdgeEnahnced.show()
+moreEdgeEnahnced.save('Edge_enhanced_rgb.tiff')
+
 #%% Issue is though that I'm not sure its sensitive enough for less obvious data  
-#plus only opens one
+#plus only opens one at a time 
+
 """
 from https://datacarpentry.org/image-processing/08-edge-detection/
  * Python script to demonstrate Canny edge detection
@@ -29,7 +50,7 @@ import skimage.feature
 import skimage.viewer
 
 
-filename = va
+filename = 'Edge_enhanced_rgb.tiff'
 image = skimage.io.imread(fname=filename, as_gray=True)
 viewer = skimage.viewer.ImageViewer(image)
 
