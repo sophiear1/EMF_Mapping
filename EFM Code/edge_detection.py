@@ -22,18 +22,18 @@ import skimage
 import skimage.feature
 import skimage.viewer
 imageObject = Image.open(va)
-imageObject = imageObject.convert('RGB')
+imageObject = imageObject.convert('RGB') # need to convert toe RGB file for enhancement but I think this might make it harder to find edges so defeats the point of the enhancement
 # Apply edge enhancement filter
-edgeEnahnced = imageObject.filter(ImageFilter.EDGE_ENHANCE)
+edgeEnhanced = imageObject.filter(ImageFilter.EDGE_ENHANCE)
 # Apply increased edge enhancement filter
-moreEdgeEnahnced = imageObject.filter(ImageFilter.EDGE_ENHANCE_MORE)
+moreEdgeEnhanced = imageObject.filter(ImageFilter.EDGE_ENHANCE_MORE)
 # Show original image - before applying edge enhancement filters
 imageObject.show() 
 # Show image - after applying edge enhancement filter
-edgeEnahnced.show()
+edgeEnhanced.show()
 # Show image - after applying increased edge enhancement filter
-moreEdgeEnahnced.show()
-moreEdgeEnahnced.save('Edge_enhanced_rgb.tiff')
+moreEdgeEnhanced.show()
+moreEdgeEnhanced.save('Edge_enhanced_rgb.tiff')
 
 #%% Issue is though that I'm not sure its sensitive enough for less obvious data  
 #plus only opens one at a time 
