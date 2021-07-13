@@ -97,6 +97,28 @@ filename = iz
 image = skimage.io.imread(fname=filename, as_gray=True)
 image_show(image)
 threshold = filters.threshold_sauvola(image)
-image_show(image > threshold)
-#%%Flood Fill
+image_show(image < threshold)
+#%%Flood Fill - experiment with seed point, tolerance and alpha 
+#high alpha seems to split into 3 different regions
+seed_point = (100, 220)
+flood_mask = seg.flood(image, seed_point, tolerance = 0.3)
+fig,ax = image_show(image)
+ax.imshow(flood_mask,alpha = 0.5)
+#%%SLIC - reduce number of regions? idk
+image_slic = seg.slic(image, n_segments = 10000)
+image_show(image_slic)
+#%%Chan-Vese, seems quite good
+filename = 'Z_t1.tiff'
+image = skimage.io.imread(fname=filename, as_gray=True)
+chan_vese = seg.chan_vese(image)
 
+fig, ax = image_show(image)
+ax.imshow(chan_vese == 0, alpha=-0.3);
+
+#%%Felzenszwalb
+filename = 'EFM_t1.tiff'
+image = skimage.io.imread(fname=filename, as_gray=True)
+chan_vese = seg.chan_vese(image)
+
+fig, ax = image_show(image)
+ax.imshow(chan_vese == 0, alpha=-0.05);
