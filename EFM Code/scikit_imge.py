@@ -46,18 +46,19 @@ image_show(image) # another way to view
 #import image
 import skimage
 from skimage import io
-image_n = io.imread(va, as_gray = True) 
+image_n = io.imread(vz, as_gray = True) 
 #show image
 plt.imshow(image_n)
 #invert image since function looks for dark
-image = image_n 
+image = 1 - image_n 
 #show inversion
 plt.imshow(image)
 #use median filter to denoise - can adjust size to change amount filtered out
 #Gets rid of speckle noise 
+#Increase more for EFM data I think
 from scipy import ndimage as ndi
 from skimage import util
-denoised = ndi.median_filter(util.img_as_float(image), size = 3)
+denoised = ndi.median_filter(util.img_as_float(image), size = 5)
 plt.imshow(denoised)
 #Threshold for seperation
 from skimage import exposure
@@ -110,7 +111,7 @@ for c in contours:
 regions = measure.regionprops(labels_masked)
 f,ax = plt.subplots()
 ax.hist([r.area for r in regions], bins = 50)
-
+#maybe delete bins for super small 
 #%% Attempt to use machine learning but not working yet 
 from keras import models, layers
 from keras.layers import Conv2D, MaxPooling2D, UpSampling2D

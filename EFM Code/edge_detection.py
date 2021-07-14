@@ -83,7 +83,6 @@ import matplotlib.pyplot as plt
 import skimage
 import skimage.feature
 import skimage.viewer
-
 import skimage.data as data
 import skimage.segmentation as seg
 from skimage import filters
@@ -91,37 +90,89 @@ from skimage import draw
 from skimage import color
 from skimage import exposure
 
+#Function to display image throughout 
 def image_show(image, nrows=1, ncols=1, cmap='gray', **kwargs):
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 16))
     ax.imshow(image, cmap='gray')
     ax.axis('off')
     return fig, ax
-
+#load in file
 filename = vz
 image = skimage.io.imread(fname=filename, as_gray=True)
 image_show(image)
-threshold = filters.threshold_sauvola(image)
-image_show(image < threshold)
+#histogram of pixels to help decided the threshold value
+#image = image*255
+fig, ax = plt.subplots(1,1)
+ax.hist(image.ravel(), bins=256, range=[0,1])
+ax.set_xlim(0,1)
+threshold = 0.5 # or
+# can use filter to determine threshold point e.g.filters.threshold_sauvola(image)
+image_show(image > threshold)
 #%%Flood Fill - experiment with seed point, tolerance and alpha 
 #high alpha seems to split into 3 different regions
 seed_point = (100, 220)
 flood_mask = seg.flood(image, seed_point, tolerance = 0.3)
 fig,ax = image_show(image)
-ax.imshow(flood_mask,alpha = 0.5)
+ax.imshow(flood_mask,alpha = -0.5)
 
 #%%Chan-Vese, seems quite good
 filename = vz
 image = skimage.io.imread(fname=filename, as_gray=True)
+image_show(image)
 chan_vese = seg.chan_vese(image)
 
 fig, ax = image_show(image)
 ax.imshow(chan_vese == 0, alpha=-0.3);
 
 filename = va
-image = skimage.io.imread(fname=filename, as_gray=True)
-chan_vese = seg.chan_vese(image)
-
-fig, ax = image_show(image)
-ax.imshow(chan_vese == 0, alpha=-0.05);
+image2 = skimage.io.imread(fname=filename, as_gray=True)
+chan_vese2 = seg.chan_vese(image2)
+fig, ax = image_show(image2)
+ax.imshow(chan_vese2 == 0, alpha=-0.05);
 #adjust and save image such that maybe do edge detction after this fill function?
+#%%Difference filter in 2D
+import scipy.ndimage as ndi
+vertical_kernel = np.array([
+    [-1],
+    [ 0],
+    [ 1],
+])
+    
+filename = vz
+image = skimage.io.imread(fname=filename, as_gray=True)
+gradient_vertical = ndi.correlate(image.astype(float),
+                                  vertical_kernel)
+fig, ax = plt.subplots()
+ax.imshow(gradient_vertical);
+#%%Sobel Edge Filter
+from skimage import img_as_float
 
+def imshow_all(*images, titles=None):
+    images = [img_as_float(img) for img in images]
+
+    if titles is None:
+        titles = [''] * len(images)
+    vmin = min(map(np.min, images))
+    vmax = max(map(np.max, images))
+    ncols = len(images)
+    height = 5
+    width = height * len(images)
+    fig, axes = plt.subplots(nrows=1, ncols=ncols,
+                             figsize=(width, height))
+    for ax, img, label in zip(axes.ravel(), images, titles):
+        ax.imshow(img, vmin=vmin, vmax=vmax)
+        ax.set_title(label)
+imshow_all(image, filters.sobel(image))
+pixelated_gradient = filters.sobel(image)
+imshow_all(image, pixelated_gradient*1)
+
+gradient = filters.sobel(image)
+titles = ['gradient before smoothing', 'gradient after smoothing']
+# Scale smoothed gradient up so they're of comparable brightness.
+imshow_all(pixelated_gradient, gradient*1.8, titles=titles)
+#%%Denoising 
+from skimage.morphology import disk
+neighborhood = disk(radius=1)  # "selem" is often the name used for "structuring element"
+median = filters.rank.median(image, neighborhood)
+titles = ['image', 'gaussian', 'median']
+imshow_all(image, gradient*5, median, titles=titles)

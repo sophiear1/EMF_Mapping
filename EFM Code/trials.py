@@ -18,6 +18,17 @@ ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
 
+#%%Alpha Blending
+from PIL import Image
+import numpy as np
+im = Image.open('P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff')
+im.show()
+imarray = np.array(im)
+invertarray = 256-imarray
+Final_Image = Image.fromarray(invertarray)
+Final_Image.show()
+
+
 #%%Plotting line graphs
 x = list(range(1,257))
 y1 = iz[155]
@@ -91,4 +102,9 @@ scanline = band.ReadRaster(xoff=0, yoff=0,
 import struct
 tuple_of_floats = struct.unpack('f' * band.XSize, scanline)
 print(tuple_of_floats)
+#%%Colour maps
+import cv2
+image_b = cv2.imread(iz, cv2.IMREAD_GRAYSCALE)
+image_c = cv2.applyColorMap(image_b,cv2.COLORMAP_JET)
+
 
