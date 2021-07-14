@@ -97,7 +97,7 @@ def image_show(image, nrows=1, ncols=1, cmap='gray', **kwargs):
     ax.axis('off')
     return fig, ax
 
-filename = iz
+filename = vz
 image = skimage.io.imread(fname=filename, as_gray=True)
 image_show(image)
 threshold = filters.threshold_sauvola(image)
@@ -108,9 +108,7 @@ seed_point = (100, 220)
 flood_mask = seg.flood(image, seed_point, tolerance = 0.3)
 fig,ax = image_show(image)
 ax.imshow(flood_mask,alpha = 0.5)
-#%%SLIC - reduce number of regions? idk
-image_slic = seg.slic(image, n_segments = 10)
-image_show(image_slic)
+
 #%%Chan-Vese, seems quite good
 filename = vz
 image = skimage.io.imread(fname=filename, as_gray=True)
@@ -127,4 +125,3 @@ fig, ax = image_show(image)
 ax.imshow(chan_vese == 0, alpha=-0.05);
 #adjust and save image such that maybe do edge detction after this fill function?
 
-#%%

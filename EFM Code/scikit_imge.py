@@ -21,7 +21,8 @@ iz = p3ht.iz()
 ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
-#%%Advanceed Workflow Example 
+
+#%%Advanceed Workflow Ideas
 import skimage
 import skimage.feature
 import skimage.viewer
@@ -45,11 +46,11 @@ image_show(image) # another way to view
 #import image
 import skimage
 from skimage import io
-image_n = io.imread(iz, as_gray = True) 
+image_n = io.imread(va, as_gray = True) 
 #show image
 plt.imshow(image_n)
 #invert image since function looks for dark
-image = 1-image_n 
+image = image_n 
 #show inversion
 plt.imshow(image)
 #use median filter to denoise - can adjust size to change amount filtered out
@@ -63,7 +64,7 @@ from skimage import exposure
 image_g = exposure.adjust_gamma(denoised, 0.7)
 plt.imshow(image_g)
 #Threshold decesicion - can attempt to automate this with algorithms later
-t = 0.5
+t = 0.2
 thresholded = (image_g <= t)
 plt.imshow(thresholded)
 #try filters to estimate value for threshold
@@ -106,8 +107,36 @@ contours = measure.find_contours(labels_masked,level = 0.5)
 plt.imshow(image)
 for c in contours:
     plt.plot(c[:,1],c[:,0])
-    #%%
 regions = measure.regionprops(labels_masked)
 f,ax = plt.subplots()
-ax.hist
+ax.hist([r.area for r in regions], bins = 50)
+
+#%% Attempt to use machine learning but not working yet 
+from keras import models, layers
+from keras.layers import Conv2D, MaxPooling2D, UpSampling2D
+M=76
+N=int(23.76*M)*2
+model = models.Sequential()
+model.add(
+        Conv2D(
+                32,
+                kernel_size=(2,2),
+                activation='relu',
+                input_shape=(N,N,1),
+                padding='same',
+            )
+    )
+model.add(MaxPooling2D(pool_size = (2,2)))
+model.add(Conv2D(64,(3,3),activation='relu',padding='same'))
+model.add(Conv2D(64,(3,3),activation='relu',padding='same'))
+model.add(UpSampling2D(size=(2,2)))
+model.add(
+        Conv2D(
+                1,
+                kernel_size=(2,2),
+                activation='sigmoid',
+                padding='same',
+            )
+    )
+model.compile(loss='mse', optimizer='Adam', metrics=['accuracy'])
     
