@@ -1,6 +1,8 @@
 # EMF_Mapping
 main.py = main class that actually works
 
+scikit_image.py = more attempts to find edges using scikit package
+
 testing.py = tests of main class
 
 trials.py = trying data techniques
