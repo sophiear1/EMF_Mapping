@@ -80,6 +80,10 @@ viewer.show()
 import numpy as np
 import matplotlib.pyplot as plt
 
+import skimage
+import skimage.feature
+import skimage.viewer
+
 import skimage.data as data
 import skimage.segmentation as seg
 from skimage import filters
@@ -105,20 +109,22 @@ flood_mask = seg.flood(image, seed_point, tolerance = 0.3)
 fig,ax = image_show(image)
 ax.imshow(flood_mask,alpha = 0.5)
 #%%SLIC - reduce number of regions? idk
-image_slic = seg.slic(image, n_segments = 10000)
+image_slic = seg.slic(image, n_segments = 10)
 image_show(image_slic)
 #%%Chan-Vese, seems quite good
-filename = 'Z_t1.tiff'
+filename = vz
 image = skimage.io.imread(fname=filename, as_gray=True)
 chan_vese = seg.chan_vese(image)
 
 fig, ax = image_show(image)
 ax.imshow(chan_vese == 0, alpha=-0.3);
 
-#%%Felzenszwalb
-filename = 'EFM_t1.tiff'
+filename = va
 image = skimage.io.imread(fname=filename, as_gray=True)
 chan_vese = seg.chan_vese(image)
 
 fig, ax = image_show(image)
 ax.imshow(chan_vese == 0, alpha=-0.05);
+#adjust and save image such that maybe do edge detction after this fill function?
+
+#%%
