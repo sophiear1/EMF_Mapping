@@ -9,7 +9,7 @@ import main
 #%% Create object using P3HT 11 
 p3ht = main.molecule(iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff', ia = 'P3HT 58k 11 5um 0V_190208_EFM Amplitude_Forward_001.tiff', vz = 'P3HT 58k 11 5um EFM 2V_190208_Z Height_Forward_003.tiff', va = 'P3HT 58k 11 5um EFM 2V_190208_EFM Amplitude_Forward_003.tiff')
 #%% Read and be array for all 4 files (should work with either hashed out)
-p3ht.read()
+p3ht.read_as_gdal()
 p3ht.bearray()
 #%%
 p3ht.image()
@@ -25,7 +25,7 @@ print(type(iz)) #if after bearray() should be <class 'numpy.ndarray'>
 #%% Testing specific function - don't run directly after above as bug since cannot call bearray then read
 iz = p3ht.iz()
 print(iz) 
-read_iz = p3ht.read(specific = iz)
+read_iz = p3ht.read_as_gdal(specific = iz)
 print(read_iz) # should be the same as above
 array_from_read = p3ht.bearray(specific = read_iz)
 array_from_iz = p3ht.bearray(specific = iz)

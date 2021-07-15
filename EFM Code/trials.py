@@ -10,6 +10,9 @@ Created on Tue Jul 6 11:52:40 2021
 import gwyfile
 #%%
 import main 
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
 p3ht = main.molecule(iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff', ia = 'P3HT 58k 11 5um 0V_190208_EFM Amplitude_Forward_001.tiff', vz = 'P3HT 58k 11 5um EFM 2V_190208_Z Height_Forward_003.tiff', va = 'P3HT 58k 11 5um EFM 2V_190208_EFM Amplitude_Forward_003.tiff')
 #p3ht.read()
 #p3ht.bearray()
@@ -18,6 +21,74 @@ ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
 
+#%%Visual image comparison Trial 1 = Difference 
+from matplotlib.gridspec import GridSpec
+from skimage import data, transform, exposure
+#from skimage.util import compare
+from skimage import io
+import numpy as np
+
+filename = vz # file
+im_vz = io.imread(fname=filename, as_gray = True)
+filename = va # file
+im_va = io.imread(fname=filename, as_gray = True)
+im_va = 1 - im_va
+#%%
+def diff_f(im1, im2):
+    comparison = np.abs(im2-im1)
+    return comparison
+
+diff = diff_f(im_vz, im_va)
+fig = plt.figure(figsize=(8, 9))
+
+gs = GridSpec(3, 2)
+ax0 = fig.add_subplot(gs[0, 0])
+ax1 = fig.add_subplot(gs[0, 1])
+ax2 = fig.add_subplot(gs[1:, :])
+
+ax0.imshow(im_vz, cmap='gray')
+ax0.set_title('Original')
+ax1.imshow(im_va, cmap='gray')
+ax1.set_title('Rotated')
+ax2.imshow(diff, cmap='gray')
+ax2.set_title('Diff comparison')
+for a in (ax0, ax1, ax2):
+    a.axis('off')
+plt.tight_layout()
+plt.plot()
+ 
+#%%Comparison blend
+def blend_f(im1, im2):
+    comparison = 0.5 * (im2 + im1)
+    return comparison
+blend = blend_f(im_vz, im_va)
+fig = plt.figure(figsize=(8, 9))
+
+gs = GridSpec(3, 2)
+ax0 = fig.add_subplot(gs[0, 0])
+ax1 = fig.add_subplot(gs[0, 1])
+ax2 = fig.add_subplot(gs[1:, :])
+
+ax0.imshow(im_vz, cmap='gray')
+ax0.set_title('Original')
+ax1.imshow(im_va, cmap='gray')
+ax1.set_title('Rotated')
+ax2.imshow(blend, cmap='gray')
+ax2.set_title('Blend comparison')
+for a in (ax0, ax1, ax2):
+    a.axis('off')
+plt.tight_layout()
+plt.plot()
+#%%Colour map changing 
+import skimage
+from skimage import color
+from skimage import io
+filename = vz # file
+image = io.imread(fname=filename)
+plt.imshow(image)
+image = color.convert_colorspace(image,'RGB','HSV')
+plt.imshow(image)
+print(type(image))
 #%%Alpha Blending
 from PIL import Image
 import numpy as np
@@ -30,12 +101,7 @@ im2 = Image.open(va)
 imarray = np.array(im2)
 im2 = 255-imarray
 im2 = Image.fromarray(im2)
-im2.show()
-print(type(im1))
-print(type(im2))
-#cm = plt.get_cmap()
-#cm = plt.get_cmap()
-
+plt.imshow(im2, cmap = plt.cm.colors)
 image_blend = Image.blend(im1, im2, 0.5)
 plt.imshow(image_blend)
 

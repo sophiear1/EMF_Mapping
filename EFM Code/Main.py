@@ -54,7 +54,7 @@ class molecule:
         """Returns EFM amplitude with voltage file"""
         return self.__va
 
-    def read(self, specific = None):
+    def read_as_gdal(self, specific = None):
         """Read TIFF File 
         
         Parameters
@@ -84,7 +84,7 @@ class molecule:
         """
         if specific is None:
             if isinstance(self.__iz, str):
-                self.read()
+                self.read_as_gdal()
             self.__iz = self.__iz.ReadAsArray()
             self.__ia = self.__ia.ReadAsArray()
             self.__vz = self.__vz.ReadAsArray()
@@ -92,7 +92,7 @@ class molecule:
             return self.__iz, self.__ia, self.__vz, self.__va
         else:
             if isinstance(specific, str):
-                specific = self.read(specific = specific)
+                specific = self.read_as_gdal(specific = specific)
             array = specific.ReadAsArray()
             return array
     
