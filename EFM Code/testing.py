@@ -5,7 +5,7 @@ Created on Mon Jul 12 12:36:49 2021
 @author: sophi
 """
 
-import main 
+import main
 #%% Create object using P3HT 11 
 p3ht = main.molecule(
     iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff', 

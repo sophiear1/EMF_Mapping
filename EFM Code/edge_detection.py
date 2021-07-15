@@ -113,7 +113,7 @@ image_show(image > threshold)
 seed_point = (100, 220)
 flood_mask = seg.flood(image, seed_point, tolerance = 0.3)
 fig,ax = image_show(image)
-ax.imshow(flood_mask,alpha = -0.5)
+ax.imshow(flood_mask,alpha = 0.5)
 
 #%%Chan-Vese, seems quite good
 filename = vz

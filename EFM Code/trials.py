@@ -47,13 +47,13 @@ def boolstr_to_floatstr(v):
 
 filename = vz # file
 im_vz = io.imread(fname=filename, as_gray = True)
-#im_vz = seg.chan_vese(im_vz)
-#im_vz = np.vectorize(boolstr_to_floatstr)(im_vz).astype(float)
+im_vz = seg.chan_vese(im_vz)
+im_vz = np.vectorize(boolstr_to_floatstr)(im_vz).astype(float)
 filename = va # file
 im_va = io.imread(fname=filename, as_gray = True)
-#im_va = 1 - im_va
-#im_va = seg.chan_vese(im_va)
-#im_va = np.vectorize(boolstr_to_floatstr)(im_va).astype(float)
+im_va = 1 - im_va
+im_va = seg.chan_vese(im_va)
+im_va = np.vectorize(boolstr_to_floatstr)(im_va).astype(float)
 
 
 #%%
@@ -75,13 +75,12 @@ ax1.imshow(im_va, cmap='gray')
 ax1.set_title('va')
 ax2.imshow(diff, cmap='gray')
 ax2.set_title('Diff comparison')
-#%%
 for a in (ax0, ax1, ax2):
     a.axis('off')
 plt.tight_layout()
 plt.plot()
  
-#Comparison blend
+#%%Comparison blend
 def blend_f(im1, im2):
     comparison = 0.5 * (im2 + im1)
     return comparison
