@@ -209,8 +209,3 @@ class molecule:
             array = img_as_float(specific)
             return array
         
-    
-        
-    
-        
-    

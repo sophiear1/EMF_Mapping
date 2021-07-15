@@ -19,6 +19,9 @@ ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
 
+#%%
+
+
 #%%Convert to Float
 from skimage import img_as_float
 from skimage import io
@@ -32,12 +35,27 @@ from skimage import data, transform, exposure
 #from skimage.util import compare
 from skimage import io
 import numpy as np
+import skimage.segmentation as seg
+
+def boolstr_to_floatstr(v):
+    if v == 'True':
+        return '1'
+    elif v == 'False':
+        return '0'
+    else:
+        return v
 
 filename = vz # file
 im_vz = io.imread(fname=filename, as_gray = True)
+#im_vz = seg.chan_vese(im_vz)
+#im_vz = np.vectorize(boolstr_to_floatstr)(im_vz).astype(float)
 filename = va # file
 im_va = io.imread(fname=filename, as_gray = True)
-im_va = 1 - im_va
+#im_va = 1 - im_va
+#im_va = seg.chan_vese(im_va)
+#im_va = np.vectorize(boolstr_to_floatstr)(im_va).astype(float)
+
+
 #%%
 def diff_f(im1, im2):
     comparison = np.abs(im2-im1)
@@ -52,17 +70,18 @@ ax1 = fig.add_subplot(gs[0, 1])
 ax2 = fig.add_subplot(gs[1:, :])
 
 ax0.imshow(im_vz, cmap='gray')
-ax0.set_title('Original')
+ax0.set_title('vz')
 ax1.imshow(im_va, cmap='gray')
-ax1.set_title('Rotated')
+ax1.set_title('va')
 ax2.imshow(diff, cmap='gray')
 ax2.set_title('Diff comparison')
+#%%
 for a in (ax0, ax1, ax2):
     a.axis('off')
 plt.tight_layout()
 plt.plot()
  
-#%%Comparison blend
+#Comparison blend
 def blend_f(im1, im2):
     comparison = 0.5 * (im2 + im1)
     return comparison
