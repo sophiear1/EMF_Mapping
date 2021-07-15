@@ -108,6 +108,60 @@ ax.set_xlim(0,1)
 threshold = 0.5 # or
 # can use filter to determine threshold point e.g.filters.threshold_sauvola(image)
 image_show(image > threshold)
+#%%More Segementation
+import scipy.ndimage as nd
+image = skimage.io.imread(vz, as_gray = True)
+segm1 = (image <= 0.01)
+segm2 = (image > 0.01) & (image <= 0.08)
+segm3 = (image > 0.08) & (image <= 0.5)
+segm4 = (image > 0.5) 
+all_segments = np.zeros((image.shape[0], image.shape[1], 3))
+all_segments[segm1] = (1,0,0) # red
+all_segments[segm2] = (0,1,0) # green
+all_segments[segm3] = (0,0,1) # blue
+all_segments[segm4] = (1,1,0) #yellow
+plt.imshow(all_segments)
+#%%Clean up a bit
+segm = [segm1, segm2, segm3, segm4]
+all_segm = []
+for i in range(0,4):
+    segm_opened = nd.binary_opening(segm[i], np.ones((3,3)))
+    segm_closed = nd.binary_closing(segm_opened, np.ones((3,3)))
+    all_segm.append(segm_closed)
+all_segmmments = np.zeros((image.shape[0], image.shape[1], 3))
+all_segments[all_segm[0]] = (1,0,0) # red
+all_segments[all_segm[1]] = (0,1,0) # green
+all_segments[all_segm[2]] = (0,0,1) # blue
+all_segments[all_segm[3]] = (1,1,0) #yellow
+plt.imshow(all_segments)
+print(image)
+#%%More Segementation
+from skimage.segmentation import random_walker
+from skimage.exposure import rescale_intensity
+import skimage
+filename = vz
+image = skimage.io.imread(fname=filename, as_gray=True)
+image = rescale_intensity(image, in_range=(0,1), out_range=(-1,1))
+markers = np.zeros(image.shape, dtype=np.uint)
+markers[image<-0.5]=1
+markers[image>0.5] =2
+labels = random_walker(image, markers, beta=10, mode='bf')
+
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(8, 3.2),
+                                    sharex=True, sharey=True)
+ax1.imshow(image, cmap='gray')
+ax1.axis('off')
+ax1.set_title('Noisy data')
+ax2.imshow(markers, cmap='magma')
+ax2.axis('off')
+ax2.set_title('Markers')
+ax3.imshow(labels, cmap='gray')
+ax3.axis('off')
+ax3.set_title('Segmentation')
+
+fig.tight_layout()
+plt.show()
+
 #%%Flood Fill - experiment with seed point, tolerance and alpha 
 #high alpha seems to split into 3 different regions
 seed_point = (100, 220)
@@ -171,9 +225,31 @@ gradient = filters.sobel(image)
 titles = ['gradient before smoothing', 'gradient after smoothing']
 # Scale smoothed gradient up so they're of comparable brightness.
 imshow_all(pixelated_gradient, gradient*1.8, titles=titles)
-#%%Denoising 
+#%%Denoising  with median filter
 from skimage.morphology import disk
 neighborhood = disk(radius=10)  # "selem" is often the name used for "structuring element"
 median = filters.rank.median(image, neighborhood)
 titles = ['image', 'gaussian', 'median']
 imshow_all(image, gradient*5, median, titles=titles)
+
+#%%Denoising with median filter
+from scipy import ndimage as ndi
+from skimage import util
+denoised = ndi.median_filter(util.img_as_float(image), size = 5)
+plt.imshow(denoised)
+#%%Denoising with Gaussian
+gaussian = ndi.gaussian_filter(image, sigma =3)
+plt.imshow(gaussian)
+from skimage.restoration import denoise_nl_means, estimate_sigma
+sigma_est = np.mean(estimate_sigma(image, multichannel=True))
+nlm = denoise_nl_means(image, h=1.5*sigma_est, fast_mode = True, patch_size=5, patch_distance=3, multichannel=True)
+plt.imshow(nlm)
+#%%
+from skimage import img_as_float, img_as_ubyte, io
+image=img_as_float(image)
+denoise_ubyte = img_as_ubyte(nlm)
+hist = plt.hist(denoise_ubyte, bins=50, range = (0,255))
+plt.show(hist)
+#%%
+
+

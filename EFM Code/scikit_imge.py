@@ -94,6 +94,7 @@ def shuffle_labels(labels):
             np.random.permutation(indices)
             )
     return indices[labels]
+
 markers = ndi.label(local_maxima)[0]
 labels = segmentation.watershed(denoised, markers)
 f, (axo,ax1,ax2) = plt.subplots(1,3)
@@ -117,6 +118,9 @@ regions = measure.regionprops(labels_masked)
 f,ax = plt.subplots()
 ax.hist([r.area for r in regions], bins = 50)
 #maybe delete bins for super small 
+#%%
+print("The percentage white region is:", np.sum(thresholded ==1)*100/(np.sum(thresholded ==0) + np.sum(thresholded ==1)))
+
 #%% Attempt to use machine learning but not working yet 
 from keras import models, layers
 from keras.layers import Conv2D, MaxPooling2D, UpSampling2D
