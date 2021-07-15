@@ -7,10 +7,21 @@ Created on Mon Jul 12 12:36:49 2021
 
 import main 
 #%% Create object using P3HT 11 
-p3ht = main.molecule(iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff', ia = 'P3HT 58k 11 5um 0V_190208_EFM Amplitude_Forward_001.tiff', vz = 'P3HT 58k 11 5um EFM 2V_190208_Z Height_Forward_003.tiff', va = 'P3HT 58k 11 5um EFM 2V_190208_EFM Amplitude_Forward_003.tiff')
-#%% Read and be array for all 4 files (should work with either hashed out)
-p3ht.read_as_gdal()
-p3ht.bearray()
+p3ht = main.molecule(
+    iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff', 
+    ia = 'P3HT 58k 11 5um 0V_190208_EFM Amplitude_Forward_001.tiff', 
+    vz = 'P3HT 58k 11 5um EFM 2V_190208_Z Height_Forward_003.tiff', 
+    va = 'P3HT 58k 11 5um EFM 2V_190208_EFM Amplitude_Forward_003.tiff'
+    )
+
+#%% Read as gdal and be array for all 4 files (should work with either hashed out)
+gdal = p3ht.read_as_gdal()
+array = p3ht.bearray()
+print(gdal)
+print(array)
+#%%Read as Image
+Image = p3ht.read_as_Image()
+print(Image)
 #%%
 p3ht.image()
 print(p3ht) #should be <main.molecule object at ..location...>
@@ -37,12 +48,12 @@ image_from_read = p3ht.image(specific = read_iz)
 #will automatically open the 3 images, which should all be the same 
 #%% Testing inversion
 p3ht.bearray()
-p3ht.invert()
+p3ht.invert_np()
 p3ht.image()
 #%% Develop so can specify more than one? + Bug only works after inital load in of molecule
 vz = p3ht.iz()
 va = p3ht.va()
 array_va = p3ht.bearray(specific = va)
-invert_va = p3ht.invert(specific = array_va)
+invert_va = p3ht.invert_np(specific = array_va)
 image_va = p3ht.image(specific = invert_va)
 image_vz = p3ht.image(specific = vz)

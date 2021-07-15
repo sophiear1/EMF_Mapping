@@ -140,6 +140,7 @@ vertical_kernel = np.array([
     
 filename = vz
 image = skimage.io.imread(fname=filename, as_gray=True)
+#image = 1-image
 gradient_vertical = ndi.correlate(image.astype(float),
                                   vertical_kernel)
 fig, ax = plt.subplots()
@@ -172,7 +173,7 @@ titles = ['gradient before smoothing', 'gradient after smoothing']
 imshow_all(pixelated_gradient, gradient*1.8, titles=titles)
 #%%Denoising 
 from skimage.morphology import disk
-neighborhood = disk(radius=1)  # "selem" is often the name used for "structuring element"
+neighborhood = disk(radius=15)  # "selem" is often the name used for "structuring element"
 median = filters.rank.median(image, neighborhood)
 titles = ['image', 'gaussian', 'median']
 imshow_all(image, gradient*5, median, titles=titles)

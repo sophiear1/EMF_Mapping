@@ -7,8 +7,6 @@ Created on Tue Jul 6 11:52:40 2021
 #Testing ideas
 
 #%%
-import gwyfile
-#%%
 import main 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,6 +19,13 @@ ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
 
+#%%Convert to Float
+from skimage import img_as_float
+from skimage import io
+iz = io.imread(iz)
+print(iz)
+iz_float = img_as_float(iz)
+print(iz_float)
 #%%Visual image comparison Trial 1 = Difference 
 from matplotlib.gridspec import GridSpec
 from skimage import data, transform, exposure

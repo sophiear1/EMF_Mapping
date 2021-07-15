@@ -49,6 +49,7 @@ from skimage import io
 image_n = io.imread(vz, as_gray = True) 
 #show image
 plt.imshow(image_n)
+#%%
 #invert image since function looks for dark
 image = 1 - image_n 
 #show inversion
