@@ -250,6 +250,91 @@ image=img_as_float(image)
 denoise_ubyte = img_as_ubyte(nlm)
 hist = plt.hist(denoise_ubyte, bins=50, range = (0,255))
 plt.show(hist)
-#%%
+#%%https://www.youtube.com/watch?v=jyYl9n5ow-Q&list=PLHae9ggVvqPgyRQQOtENr6hK0m1UquGaG&index=50
+#Apeer_Micro Course Follow Through 
+import cv2 
+import skimage
+from skimage import io, img_as_float, img_as_ubyte
+import numpy as np
+import cv2
+import tifffile 
+from matplotlib import pyplot as plt
+import glob
+#%%reading image
+image = skimage.io.imread(vz, as_gray=True) # read in image
+print(image) # show array
+image_float = img_as_float(image) #convert from 8bit to float in array
+image_8bit = img_as_ubyte(image_float) #convert from float to 8bit
+gray_image = cv2.imread(vz,0)
+color_image = cv2.imread(vz,1)
+print(type(gray_image))
+print(type(image)) # both are numpy arrays so I think methods from opencv and skimage will both work
+image1 = tifffile.imread(vz)
+print(np.shape(image1))
+#%%saving file
+io.imsave(wanted_filename, variable)#if tiff uses tifffile in background as below # better as 8 bit than float
+cv2.imwrite(wanted_filename, variable)#looks better is not float
+plt.imsave(wanted_filename, variable) # for gray scale defne colormap 
+tifffile.imwrite(wanted_filename, variable)
+#%%converting colors
+RGB = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
+#%%Display Images
+io.imshow(image)
+plt.imshow(image) # can change color map e.g. cmap='hot'
+cv2.imshow('window name', image)
+cv2.waitKey(0)   # need this waitkey I'm not sure why
 
+#%%Plotting with plt
+plt.imshow(gray_image, cmap = 'gray') 
+#plt.hist(gray_image, bins=10, range=(0,255))
+#takes forever
+#plot 3 images horizontally
+plt.figure(figsize = (16,6))
+plt.subplot(131)
+plt.imshow(image)
+plt.subplot(132)
+plt.imshow(gray_image)
+plt.subplot(133)
+plt.imshow(color_image)
+plt.show()
+#plot 3 images vertically 
+plt.figure(figsize=(6, 16))
+plt.subplot(311) 
+plt.imshow(image)
+plt.subplot(312)
+plt.imshow(gray_image)
+plt.subplot(313)
+plt.imshow(color_image)
+plt.show()
+#plt as grid
+plt.figure(figsize=(12, 12))
+plt.subplot(221) 
+plt.imshow(image)
+plt.subplot(222)
+plt.imshow(gray_image)
+plt.subplot(223)
+plt.imshow(color_image)
+plt.show()
+#Another Method
+fig = plt.figure(figsize =(16,6))
+ax1=fig.add_subplot(131)
+ax1.set(title = 'image')
+ax2=fig.add_subplot(132)
+ax2.set(title='gray_scale')
+ax3=fig.add_subplot(133)
+ax3.set(title='color_map')
+ax1.imshow(image)
+ax2.imshow(gray_image)
+ax3.imshow(color_image)
+plt.show()
+#%% Reading in multiple files 
+file_list = glob.glob('*.tiff*')
+print(file_list)
+path = '*.tiff*'
+my_list = []
+for file in glob.glob(path):
+    print(file)
+    a = cv2.imread(file)
+    my_list.append(a)
+plt.imshow(my_list[0])
 
