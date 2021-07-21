@@ -14,13 +14,20 @@ p3ht = main.molecule(
     va = 'P3HT 58k 11 5um EFM 2V_190208_EFM Amplitude_Forward_003.tiff'
     )
 
+#%%
+p3ht.read_as_skimage()
+#iz = p3ht.iz()
+#main.plt.imshow
+p3ht.denoise_bilateral(auto = False, color_sig = [0.05, 0.05, 0.05, 0.05], distance_sig = [1,1,1,10])
+#p3ht.convert_to(conversion = 'to_8bit')
+p3ht.image()
 #%% Read as gdal and be array for all 4 files (should work with either hashed out)
 gdal = p3ht.read_as_gdal()
 array = p3ht.bearray()
 print(gdal)
 print(array)
 #%%Read as Image
-Image = p3ht.read_as_Image()
+Image = p3ht.read_as_skimage()
 print(Image)
 #%%
 p3ht.image()

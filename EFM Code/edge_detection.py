@@ -241,7 +241,7 @@ imshow_all(image, gradient*5, median, titles=titles)
 #%%Denoising with median filter
 from scipy import ndimage as ndi
 from skimage import util
-denoised = ndi.median_filter(util.img_as_float(image), size = 5)
+denoised = ndi.median_filter(util.img_as_float(image), size = 0.5)
 plt.imshow(denoised)
 #%%Denoising with Gaussian
 gaussian = ndi.gaussian_filter(image, sigma =3)
@@ -415,6 +415,9 @@ plt.subplot(212)
 plt.imshow(unsharped_image, cmap = 'gray')
 plt.show()
 #%%Denoising with Gaussian
+image = io.imread(iz)
+image = img_as_float(image)
+#array = np.array([0.0])
 gaussian_using_cv2 = cv2.GaussianBlur(image, (3,3), 0, borderType=cv2.BORDER_CONSTANT)
 gaussian_using_skimage = gaussian(image, sigma=1)#, mode='constant', cval=0.0)
 plt.figure(figsize = (16,6))
@@ -429,7 +432,7 @@ plt.show()
 image = img_as_ubyte(image)
 median_using_cv2 = cv2.medianBlur(image,3)
 image = img_as_float(image)
-median_using_skimage = median(image, disk(3), mode='constant', cval=0.0)
+median_using_skimage = median(image, disk(1), mode='constant', cval=0.0)
 plt.figure(figsize = (16,6))
 plt.subplot(131)
 plt.imshow(image)
@@ -595,7 +598,7 @@ plt.imshow(clahe_img, cmap = 'gray')
 plt.subplot(326)
 plt.hist(clahe_img.flat, bins=100, range=(0,255))
 plt.show()
-#%% More Segmentation woo hoo
+#%% More Segmentation 
 #Automatic Thresholding
 image = cv2.imread(vz,1)
 blue_channel = image[:,:,0]

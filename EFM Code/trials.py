@@ -126,7 +126,7 @@ image_blend = Image.blend(im1, im2, 0.5)
 plt.imshow(image_blend)
 
 #%%Plotting line graphs
-x = list(range(1,257))
+x = list(range(0,256))
 y1 = iz[155]
 main.plt.plot(x,y1) # plot pixel 155 row
 main.plt.show()

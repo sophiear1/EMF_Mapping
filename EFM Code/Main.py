@@ -51,6 +51,10 @@ class molecule:
             Z height with voltage 
         za : str name of TIFF file
             EFM amplitude with voltage 
+        
+        Returns
+        -------
+        
         """
         self.__iz = iz
         self.__ia = ia
@@ -127,8 +131,8 @@ class molecule:
             self.__va = io.imread(fname = self.__va, as_gray = gray)
             return self.__iz, self.__ia, self.__vz, self.__va
         else: 
-            file = io.imread(specific, as_gray = gray)
-            return file
+            specific = io.imread(specific, as_gray = gray)
+            return specific
         
     def read_as_cv2(self, specific = None, gray = False):
         """Read TIFF File using cv2 library
@@ -191,6 +195,8 @@ class molecule:
         if specific is None:
             if not isinstance(self.__iz, np.ndarray):
                 self.bearray()
+            if isinstance(self.__iz[0,0], np.floating ):
+                self.convert_to(conversion = 'to_8bit')
             self.__iz = Image.fromarray(self.__iz)
             self.__iz.show()
             self.__ia = Image.fromarray(self.__ia)
@@ -203,9 +209,9 @@ class molecule:
         else:
             if not isinstance(specific, np.ndarray):
                 specific = self.bearray(specific = specific)
-            image = Image.fromarray(specific)
-            image.show()
-            return image
+            specific = Image.fromarray(specific)
+            specific.show()
+            return specific
     
     
     def invert_np(self, specific = None):
@@ -224,11 +230,11 @@ class molecule:
             inversion = np.invert(specific)
             return inversion
         
-    def convert_to(self, conversion = 'float' ,specific = None):
+    def convert_to(self, conversion = 'to_float' ,specific = None):
         """ Converts from 0-255 range to float (0-1) range or other way
         
         Parameters
-        conversion : float or 8bit
+        conversion : to_float or to_8bit
         specific : numpy.ndarray
             If None (defalut), will convert all arrays to float
             If not None, will convert specified array
@@ -236,12 +242,12 @@ class molecule:
         if specific is None:
             if isinstance(self.__iz, str):
                 self.read_as_skimage()
-            if conversion == 'float': 
+            if conversion == 'to_float': 
                 self.__iz = img_as_float(self.__iz)
                 self.__ia = img_as_float(self.__ia)
                 self.__vz = img_as_float(self.__vz)
                 self.__va = img_as_float(self.__va)
-            if conversion == '8bit':
+            if conversion == 'to_8bit':
                 self.__iz = img_as_ubyte(self.__iz)
                 self.__ia = img_as_ubyte(self.__ia)
                 self.__vz = img_as_ubyte(self.__vz)
@@ -250,11 +256,12 @@ class molecule:
         else:
             if isinstance(specific, str):
                 specific = self.read_as_skimage(specific = specific)
-            if conversion == 'float':
+            if conversion == 'to_float':
                 array = img_as_float(specific)
-            if conversion == '8bit' :
+            if conversion == 'to_8bit' :
                 array = img_as_ubyte(specific)
-            return array
+            specific = array
+            return specific
     
     def sharpen_edges_with_unsharpen_mask(self, r, a, specific = None):
         """ Sharpens the edges of the image by subtracting background mask
@@ -279,7 +286,217 @@ class molecule:
             if isinstance(specific, str):
                 specific = self.read_as_skimage(specific = specific) 
             sharpened = unsharp_mask(specific, radius=r, amount=a)
-            return sharpened
+            specific = sharpened
+            return specific
         
-    def denoise(self, denoise_with = 'gaussian', specific = None):
+    def line_graph(self, direction, pixel, graph = True):
+        """ Generates a horizontal or vertical line graph of Z height or EFM 
+            at specified pixel 
+       ######## ADD SPECIFC and UBYTE OPTION and diagram option
+        Parameters
+        direction : str
+            horizontal or vertical
+            Dictates the direction of the line
+        pixel : integer between 0 and 256 
+            Decided the point on the y or x axis that dictates the start of 
+            the line
+        graph : boolean
+            If True (default), will show the graph after the function is called
+            If False, will not show the graph after the function is called
+
+        Returns
+        -------
+        Line Graph
+
+        """
+        x = list(range(0,256))
+        if direction == 'h':
+            self.__iz = self.__iz[pixel]
+            self.__ia = self.__ia[pixel]
+            self.__vz = self.__vz[pixel]
+            self.__va = self.__va[pixel]
+        if direction == 'v':
+            self.__iz = self.__iz[:,pixel]
+            self.__ia = self.__ia[:,pixel]
+            self.__vz = self.__vz[:,pixel]
+            self.__va = self.__va[:,pixel]
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows = 2, ncols=2)
+        ax1.plot(x, self.__iz)
+        ax2.plot(x, self.__ia)
+        ax3.plot(x, self.__vz)
+        ax4.plot(x, self.__va)
+        if graph == True:
+            plt.show()
+        
+    def denoise_gaussian(self, auto = True, sig = [], to_float = True, specific = None):
+        """ Denoises using skimage gaussian package
+        ###Type doesn't matter but later many skimage want float so also converts to float
+
+        Parameters
+        sig : array or list
+            Sigma values for each one
+        to_float : boolean
+            If True (default), function also converts image array to float
+            If False, doesn't do converion'
+        specific : numpy.ndarray
+            If None (defalut), will convert all arrays to float
+            If not None, will convert specified array
+       
+        Returns
+        -------
+        Line Graph
+        """
+        if specific is None:
+            if isinstance(self.__iz, str):
+                self.read_as_skimage()
+            if to_float is True:
+                self.convert_to(conversion = 'to_float')
+            if auto is True:
+                sig = np.array([
+                    np.mean(estimate_sigma(self.__iz, multichannel=True)),
+                    np.mean(estimate_sigma(self.__ia, multichannel=True)),
+                    np.mean(estimate_sigma(self.__vz, multichannel=True)), 
+                    np.mean(estimate_sigma(self.__va, multichannel=True))
+                    ])
+            self.__iz = gaussian(self.__iz, sigma= sig[0], mode='constant', cval=0.0)
+            self.__ia = gaussian(self.__ia, sigma=sig[1], mode='constant', cval=0.0)
+            self.__vz = gaussian(self.__vz, sigma=sig[2], mode='constant', cval=0.0)
+            self.__va = gaussian(self.__va, sigma=sig[3], mode='constant', cval=0.0)
+            return self.__iz, self.__ia, self.__vz, self.__va
+        else:
+           if isinstance(specific, str):
+                specific = self.read_as_skimage(specific=specific)
+           if to_float is True:
+                specific = self.convert_to(conversion = 'to_float', specific = specific)
+           if auto is True:
+                sig = np.array([
+                    np.mean(estimate_sigma(specific, multichannel=True))])
+           specific = gaussian(specific, sigma= sig[0], mode='constant', cval=0.0)
+           return specific
+   
+    def denoise_median(self, auto = True, r = [], to_float = True, specific = None ):
+        """ Denoises using skimage median function using a disk of radius r
+
+        Parameters
+        r : array of the 4 sigma values
+            radius of disk for denoising 
+        to_float : boolean
+            If True (default), function also converts image array to float
+            If False, doesn't do converion'
+        specific : numpy.ndarray
+            If None (defalut), will convert all arrays to float
+            If not None, will convert specified array
+       
+        Returns
+        -------
+        Line Graph
+        median(image, disk(3), mode='constant', cval=0.0)
+        """
+        if specific is None:
+            if isinstance(self.__iz, str):
+                self.read_as_skimage()
+            if to_float is True:
+                self.convert_to(conversion = 'to_float')
+            if auto is True:
+                r = [1,1,1,1]
+            self.__iz = median(self.__iz, disk(r[0]), mode='constant', cval=0.0)
+            self.__ia = median(self.__ia, disk(r[1]), mode='constant', cval=0.0)
+            self.__vz = median(self.__vz, disk(r[2]), mode='constant', cval=0.0)
+            self.__va = median(self.__va, disk(r[3]), mode='constant', cval=0.0)
+            return self.__iz, self.__ia, self.__vz, self.__va
+        else:
+           if isinstance(specific, str):
+                specific = self.read_as_skimage(specific=specific)
+           if to_float is True:
+                specific = self.convert_to(conversion = 'to_float', specific = specific)
+           if auto is True:
+                r= [1]
+           specific = median(specific, disk(r[0]), mode='constant', cval=0.0)
+           return specific
+       
+    def denoise_bilateral(self, auto = True, color_sig = [], distance_sig = [], to_float = True, specific = None):
+        """
+        Denoise the images using bilateral function from skimage
+
+        Parameters
+        ----------
+        auto : BOOLEAN, optional
+            DESCRIPTION. The default is True.
+            If True, the function automatcially generates the values of sigma
+            If False, values of sigma can be manually entered into function
+        color_sig : NUMPY ARRAY or LIST, optional
+            DESCRIPTION. The default is [].
+            Values for the sigma of the denoising in relation to the color difference
+            larger sigma means averaging a larger number of color levels
+        distance_sig : NUMPY ARRAY or LIST, optional
+            DESCRIPTION. The default is [].
+            Values for the sigma of the denoising in relation to distance 
+            Larger sigma means averaging a larger number of pixels 
+        to_float : BOOLEAN, optional
+            DESCRIPTION. The default is True.
+            If True, converts the array of values to floats
+            If False, doesn't make the conversion - note function used requires float values
+        specific : STRING or ARRAY, optional
+            DESCRIPTION. The default is None.
+            Can be used to complete function on only one 
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        if specific is None:
+            if isinstance(self.__iz, str):
+                self.read_as_skimage()
+            if to_float is True:
+                self.convert_to(conversion = 'to_float')
+            if auto is True:
+                distance_sig = np.array([
+                    np.mean(estimate_sigma(self.__iz, multichannel=True)),
+                    np.mean(estimate_sigma(self.__ia, multichannel=True)),
+                    np.mean(estimate_sigma(self.__vz, multichannel=True)), 
+                    np.mean(estimate_sigma(self.__va, multichannel=True))
+                    ])
+                color_sig = [0.05, 0.05, 0.05, 0.05]
+            self.__iz = denoise_bilateral(self.__iz, 
+                                          sigma_color=color_sig[0],
+                                          sigma_spatial=distance_sig[0], 
+                                          multichannel=False)
+            self.__ia = denoise_bilateral(self.__ia, 
+                                          sigma_color=color_sig[1], 
+                                          sigma_spatial=distance_sig[1], 
+                                          multichannel=False)
+            self.__vz = denoise_bilateral(self.__vz, 
+                                          sigma_color=color_sig[2], 
+                                          sigma_spatial=distance_sig[2], 
+                                          multichannel=False)
+            self.__va = denoise_bilateral(self.__va, 
+                                          sigma_color=color_sig[3], 
+                                          sigma_spatial=distance_sig[3], 
+                                          multichannel=False)
+            return self.__iz, self.__ia, self.__vz, self.__va
+        else:
+           if isinstance(specific, str):
+                specific = self.read_as_skimage(specific=specific)
+           if to_float is True:
+                specific = self.convert_to(conversion = 'to_float', specific = specific)
+           if auto is True:
+                 distance_sig = np.array([
+                    np.mean(estimate_sigma(specific, multichannel=True))])
+                 color_sig = [0.5]
+           specific = denoise_bilateral(specific, 
+                                          sigma_color=color_sig[0], 
+                                          sigma_spatial=distance_sig[0], 
+                                          multichannel=False)
+           return specific
+
+    def denoise_nlm(self, specific = None):
+        
+        nlm_using_skimage = denoise_nl_means(image, h=1.15*sigma_est, fast_mode=True, patch_size=5, patch_distance=3, multichannel=False)
+        
+        
+        
+        
+        
         
