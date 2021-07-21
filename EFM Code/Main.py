@@ -8,9 +8,21 @@ import gdal
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
-import skimage
 from skimage import io
 from skimage import img_as_float
+import cv2 
+import skimage
+from skimage import io, img_as_float, img_as_ubyte, color, filters, feature, measure
+from skimage.transform import rescale,resize, downscale_local_mean
+from skimage.filters import gaussian, sobel, unsharp_mask, median, roberts, scharr, prewitt, threshold_multiotsu, threshold_otsu
+from skimage.morphology import disk
+from skimage.restoration import denoise_bilateral, denoise_nl_means, estimate_sigma, denoise_tv_chambolle
+from skimage.color import rgb2gray, label2rgb
+from skimage.segmentation import clear_border
+import tifffile 
+import glob
+import os
+import pandas as pd 
 
 
 class molecule:
@@ -97,7 +109,7 @@ class molecule:
             return file
         
     def read_as_skimage(self, specific = None, gray = False):
-        """Read TIFF File using Image library
+        """Read TIFF File using scikit-image library
         
         Parameters
         ----------
@@ -118,6 +130,31 @@ class molecule:
             file = io.imread(specific, as_gray = gray)
             return file
         
+    def read_as_cv2(self, specific = None, gray = False):
+        """Read TIFF File using cv2 library
+        
+        Parameters
+        ----------
+        specific : str name of TIFF file 
+            If None (default), the four files will be read
+            If not None, the specified file will be read 
+        gray : True of False
+            If False (default), imports in color
+            If True , imports in grey scale
+        """
+        if gray is False:
+            gray = 1
+        if gray is True:
+            gray = 0 
+        if specific is None:
+            self.__iz = cv2.imread(self.__iz, gray)
+            self.__ia = cv2.imread(self.__ia, gray)
+            self.__vz = cv2.imread(self.__vz, gray)
+            self.__va = cv2.imread(self.__va, gray)
+            return self.__iz, self.__ia, self.__vz, self.__va
+        else: 
+            file = io.imread(specific, as_gray = gray)
+            return file 
 
     def bearray(self, specific = None):
         """Take the read TIFF File and convert to an array
@@ -187,10 +224,11 @@ class molecule:
             inversion = np.invert(specific)
             return inversion
         
-    def convert_to_float(self, specific = None):
-        """ Converts from 0-255 range to float (0-1) range 
+    def convert_to(self, conversion = 'float' ,specific = None):
+        """ Converts from 0-255 range to float (0-1) range or other way
         
         Parameters
+        conversion : float or 8bit
         specific : numpy.ndarray
             If None (defalut), will convert all arrays to float
             If not None, will convert specified array
@@ -198,14 +236,50 @@ class molecule:
         if specific is None:
             if isinstance(self.__iz, str):
                 self.read_as_skimage()
-            self.__iz = img_as_float(self.__iz)
-            self.__ia = img_as_float(self.__ia)
-            self.__vz = img_as_float(self.__vz)
-            self.__va = img_as_float(self.__va)
+            if conversion == 'float': 
+                self.__iz = img_as_float(self.__iz)
+                self.__ia = img_as_float(self.__ia)
+                self.__vz = img_as_float(self.__vz)
+                self.__va = img_as_float(self.__va)
+            if conversion == '8bit':
+                self.__iz = img_as_ubyte(self.__iz)
+                self.__ia = img_as_ubyte(self.__ia)
+                self.__vz = img_as_ubyte(self.__vz)
+                self.__va = img_as_ubyte(self.__va)
             return self.__iz, self.__ia, self.__vz, self.__va
         else:
             if isinstance(specific, str):
                 specific = self.read_as_skimage(specific = specific)
-            array = img_as_float(specific)
+            if conversion == 'float':
+                array = img_as_float(specific)
+            if conversion == '8bit' :
+                array = img_as_ubyte(specific)
             return array
+    
+    def sharpen_edges_with_unsharpen_mask(self, r, a, specific = None):
+        """ Sharpens the edges of the image by subtracting background mask
+        
+        Parameters
+        r : float or integer
+            Is the radius circle of pixels blurred to create the mask 
+        a : float or integer
+            If the multiplication of the original-blurred
+        specific : numpy.ndarray
+            If None (defalut), will convert all arrays to float
+            If not None, will convert specified array
+        """
+        if specific is None:
+            if isinstance(self.__iz, str):
+                self.read_as_skimage()
+            self.__iz = unsharp_mask(self.__iz,radius=r,amount=a)
+            self.__ia = unsharp_mask(self.__ia,radius=r,amount=a)
+            self.__vz = unsharp_mask(self.__vz,radius=r,amount=a)
+            self.__va = unsharp_mask(self.__va,radius=r,amount=a)
+        else:
+            if isinstance(specific, str):
+                specific = self.read_as_skimage(specific = specific) 
+            sharpened = unsharp_mask(specific, radius=r, amount=a)
+            return sharpened
+        
+    def denoise(self, denoise_with = 'gaussian', specific = None):
         

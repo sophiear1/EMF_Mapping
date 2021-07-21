@@ -19,9 +19,6 @@ ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
 
-#%%
-
-
 #%%Convert to Float
 from skimage import img_as_float
 from skimage import io
@@ -136,6 +133,7 @@ main.plt.show()
 y2 = iz[:,155]
 main.plt.plot(x,y2) # plot pixel 155 column
 main.plt.show()
+
 #%% Normalise to between 0 and 1
 #Its also possible to give a Gaussian Distrubution if that's helpful 
 #https://machinelearningmastery.com/how-to-manually-scale-image-pixel-data-for-deep-learning/
@@ -201,4 +199,19 @@ scanline = band.ReadRaster(xoff=0, yoff=0,
 import struct
 tuple_of_floats = struct.unpack('f' * band.XSize, scanline)
 print(tuple_of_floats)
+
+import exifread
+f = open(va, 'rb')
+tags = exifread.process_file(f)
+for tag in tags.keys():
+    if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote'):
+        print("Key: %s, value %s" % (tag, tags[tag]))
+#%%
+from raster2xyz.raster2xyz import Raster2xyz
+
+input_raster = vz
+out_csv = "extraction_attempt.xyz"
+
+rtxyz = Raster2xyz()
+rtxyz.translate(input_raster, out_csv)
 

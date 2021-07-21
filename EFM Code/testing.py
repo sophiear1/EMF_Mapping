@@ -26,6 +26,9 @@ print(Image)
 p3ht.image()
 print(p3ht) #should be <main.molecule object at ..location...>
 print(type(p3ht)) #should be <class 'main.molecule'>
+#%%
+cv2 = p3ht.read_as_cv2()
+print(cv2, p3ht.iz())
 #%% Fetching individual files 
 iz = p3ht.iz()
 ia = p3ht.ia()

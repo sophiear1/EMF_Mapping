@@ -52,6 +52,7 @@ https://github.com/FienSoP/canny_edge_detector
 import skimage
 import skimage.feature
 import skimage.viewer
+import tifffile
 
 
 filename = 'Edge_enhanced_rgb.tiff'
@@ -85,7 +86,7 @@ import skimage.feature
 import skimage.viewer
 import skimage.data as data
 import skimage.segmentation as seg
-from skimage import filters
+from skimage import filters, img_as_float
 from skimage import draw
 from skimage import color
 from skimage import exposure
@@ -99,18 +100,20 @@ def image_show(image, nrows=1, ncols=1, cmap='gray', **kwargs):
 #load in file
 filename = vz
 image = skimage.io.imread(fname=filename, as_gray=True)
+image = img_as_float(image)
 image_show(image)
 #histogram of pixels to help decided the threshold value
 #image = image*255
 fig, ax = plt.subplots(1,1)
 ax.hist(image.ravel(), bins=256, range=[0,1])
 ax.set_xlim(0,1)
-threshold = 0.5 # or
+threshold = 0.6 # or
 # can use filter to determine threshold point e.g.filters.threshold_sauvola(image)
 image_show(image > threshold)
 #%%More Segementation
 import scipy.ndimage as nd
 image = skimage.io.imread(vz, as_gray = True)
+image = img_as_float(image)
 segm1 = (image <= 0.01)
 segm2 = (image > 0.01) & (image <= 0.08)
 segm3 = (image > 0.08) & (image <= 0.5)
@@ -164,10 +167,12 @@ plt.show()
 
 #%%Flood Fill - experiment with seed point, tolerance and alpha 
 #high alpha seems to split into 3 different regions
+filename = vz
+image = skimage.io.imread(fname=filename, as_gray=True)
 seed_point = (100, 220)
 flood_mask = seg.flood(image, seed_point, tolerance = 0.3)
-fig,ax = image_show(image)
-ax.imshow(flood_mask,alpha = 0.5)
+fig,ax = image_show(image, cmap = 'gray')
+ax.imshow(flood_mask,alpha = 0.5, cmap = 'gray')
 
 #%%Chan-Vese, seems quite good
 filename = vz
@@ -176,13 +181,14 @@ image_show(image)
 chan_vese = seg.chan_vese(image)
 
 fig, ax = image_show(image)
-ax.imshow(chan_vese == 0, alpha=-0.3);
+ax.imshow(chan_vese == 0, alpha=-0.3, cmap='gray');
 
 filename = va
 image2 = skimage.io.imread(fname=filename, as_gray=True)
+image_show(image2)
 chan_vese2 = seg.chan_vese(image2)
 fig, ax = image_show(image2)
-ax.imshow(chan_vese2 == 0, alpha=-0.05);
+ax.imshow(chan_vese2 == 0, alpha=2);#-0.05);
 #adjust and save image such that maybe do edge detction after this fill function?
 #%%Difference filter in 2D
 import scipy.ndimage as ndi
@@ -198,7 +204,7 @@ image = skimage.io.imread(fname=filename, as_gray=True)
 gradient_vertical = ndi.correlate(image.astype(float),
                                   vertical_kernel)
 fig, ax = plt.subplots()
-ax.imshow(gradient_vertical);
+ax.imshow(gradient_vertical, cmap = 'gray');
 #%%Sobel Edge Filter
 from skimage import img_as_float
 
@@ -254,12 +260,20 @@ plt.show(hist)
 #Apeer_Micro Course Follow Through 
 import cv2 
 import skimage
-from skimage import io, img_as_float, img_as_ubyte
+from skimage import io, img_as_float, img_as_ubyte, color, filters, feature, measure
+from skimage.transform import rescale,resize, downscale_local_mean
+from skimage.filters import gaussian, sobel, unsharp_mask, median, roberts, scharr, prewitt, threshold_multiotsu, threshold_otsu
+from skimage.morphology import disk
+from skimage.restoration import denoise_bilateral, denoise_nl_means, estimate_sigma, denoise_tv_chambolle
+from skimage.color import rgb2gray, label2rgb
+from skimage.segmentation import clear_border
 import numpy as np
 import cv2
 import tifffile 
 from matplotlib import pyplot as plt
 import glob
+import os
+import pandas as pd 
 #%%reading image
 image = skimage.io.imread(vz, as_gray=True) # read in image
 print(image) # show array
@@ -283,7 +297,7 @@ io.imshow(image)
 plt.imshow(image) # can change color map e.g. cmap='hot'
 cv2.imshow('window name', image)
 cv2.waitKey(0)   # need this waitkey I'm not sure why
-
+cv2.destroyAllWindows()
 #%%Plotting with plt
 plt.imshow(gray_image, cmap = 'gray') 
 #plt.hist(gray_image, bins=10, range=(0,255))
@@ -317,17 +331,19 @@ plt.imshow(color_image)
 plt.show()
 #Another Method
 fig = plt.figure(figsize =(16,6))
-ax1=fig.add_subplot(131)
+ax1=fig.add_subplot(221)
 ax1.set(title = 'image')
-ax2=fig.add_subplot(132)
+ax2=fig.add_subplot(222)
 ax2.set(title='gray_scale')
-ax3=fig.add_subplot(133)
+ax3=fig.add_subplot(223)
 ax3.set(title='color_map')
+ax4=fig.add_subplot(224)
+ax4.set(title='other')
 ax1.imshow(image)
 ax2.imshow(gray_image)
 ax3.imshow(color_image)
 plt.show()
-#%% Reading in multiple files 
+#%% Reading in multiple files with glob and os
 file_list = glob.glob('*.tiff*')
 print(file_list)
 path = '*.tiff*'
@@ -337,4 +353,294 @@ for file in glob.glob(path):
     a = cv2.imread(file)
     my_list.append(a)
 plt.imshow(my_list[0])
+#%% Image processing with scikit-image
+image = io.imread(vz, as_gray = True)
+img_rescale = rescale(image, 1.0 / 4.0, anti_aliasing=False)
+img_resized = resize(image, (200,200), anti_aliasing=True)
+img_downscaled = downscale_local_mean(image, (2,3))
+plt.figure(figsize=(12, 12))
+plt.subplot(221) 
+plt.imshow(image)
+plt.subplot(222)
+plt.imshow(img_rescale)
+plt.subplot(223)
+plt.imshow(img_resized)
+plt.subplot(224)
+plt.imshow(img_downscaled)
+plt.show()
+gaussian_using_skimage = gaussian(image, sigma=1, mode = 'constant', cval = 0.0)
+plt.imshow(gaussian_using_skimage)
+sobel_img = sobel(image) # remember only works with gray 
+plt.imshow(sobel_img, cmap = 'gray')
+#%% Image processiong with OpenCV
+image=cv2.imread(vz, 1) #import as BGR
+resized = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+cv2.imshow('original pic', image)
+cv2.imshow('resized pic', resized)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+image_grey=cv2.imread(vz,0)
+print(image.shape)
+print('Top left', image[0,0])
+print("Top right", image[0, 255]) 
+print("Bottom Left", image[255, 0]) 
+print("Bottom right", image[255, 255])
+blue = image[:,:,0]
+green = image[:,:,1]
+red = image[:,:,2]
+b,g,r = cv2.split(image)
+image_merged = cv2.merge((b,g,r))
+cv2.imshow('red pic', red)
+cv2.imshow('color pic', image)
+cv2.imshow('green pic', g)
+cv2.imshow('blue pic', b)
+cv2.imshow('image merged', image_merged)
+cv2.waitKey(0)
+cv2.destroyAllWindows()   
+edges = cv2.Canny(image, 0, 255)
+cv2.imshow('orginal', image)
+cv2.imshow('canny', edges)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
+#%%Sharpening using unsharp mask
+image = io.imread(vz, as_gray=True)
+#Radius affects blurring
+#Amount affects multiplication factor for original-blurred
+unsharped_image = unsharp_mask(image,radius=3,amount=2)
+plt.figure(figsize=(6, 12))
+plt.subplot(211) 
+plt.imshow(image, cmap='gray')
+plt.subplot(212)
+plt.imshow(unsharped_image, cmap = 'gray')
+plt.show()
+#%%Denoising with Gaussian
+gaussian_using_cv2 = cv2.GaussianBlur(image, (3,3), 0, borderType=cv2.BORDER_CONSTANT)
+gaussian_using_skimage = gaussian(image, sigma=1)#, mode='constant', cval=0.0)
+plt.figure(figsize = (16,6))
+plt.subplot(131)
+plt.imshow(image)
+plt.subplot(132)
+plt.imshow(gaussian_using_cv2)
+plt.subplot(133)
+plt.imshow(gaussian_using_skimage)
+plt.show()
+#%%Denoising with Median
+image = img_as_ubyte(image)
+median_using_cv2 = cv2.medianBlur(image,3)
+image = img_as_float(image)
+median_using_skimage = median(image, disk(3), mode='constant', cval=0.0)
+plt.figure(figsize = (16,6))
+plt.subplot(131)
+plt.imshow(image)
+plt.subplot(132)
+plt.imshow(median_using_cv2)
+plt.subplot(133)
+plt.imshow(median_using_skimage)
+plt.show()
+#%%Denoising with bilateral
+image = img_as_ubyte(image)
+bilateral_using_cv2 = cv2.bilateralFilter(image,5,20,100, borderType=cv2.BORDER_CONSTANT)
+image = img_as_float(image)
+bilateral_using_skimage = denoise_bilateral(image, sigma_color=0.05, sigma_spatial=1.5, multichannel=False)
+plt.figure(figsize = (16,6))
+plt.subplot(131)
+plt.imshow(image)
+plt.subplot(132)
+plt.imshow(bilateral_using_cv2)
+plt.subplot(133)
+plt.imshow(bilateral_using_skimage)
+plt.show()
+#%%Denoising with NLM
+sigma_est = np.mean(estimate_sigma( image, multichannel=True))
+nlm_using_skimage = denoise_nl_means(image, h=1.15*sigma_est, fast_mode=True, patch_size=5, patch_distance=3, multichannel=False)
+plt.figure(figsize = (12,6))
+plt.subplot(121)
+plt.imshow(image)
+plt.subplot(122)
+plt.imshow(nlm_using_skimage)
+plt.show()
+#%%Denoise using Total Variance 
+imgage = img_as_float(io.imread(vz, as_gray=True))
+plt.hist(image.flat, bins=100, range=(0,1))
+denoise_variance = denoise_tv_chambolle(imgage, weight=0.1, eps=0.0002, n_iter_max=200, multichannel=False)
+plt.hist(denoise_variance.flat, bins=100, range=(0,1))  
+plt.show()
+plt.figure(figsize = (12,6))
+plt.subplot(121)
+plt.imshow(image)
+plt.subplot(122)
+plt.imshow(denoise_variance)
+plt.show()
+#%%Edge Detection Filters
+#Roberts = Approximate gradient between diagonally adjacent = highlights high spatial gradient
+#Sobel = Similar to Roberts but with horizontal/vertical kernels instead of diagonal
+#Scharr = Similar to Sobel but x and y are independent 
+#Prewitt = Faster than Sobel
+#canny - can be automated or not automated depending similar to above 
+image = cv2.imread(vz, 0)
+roberts_im = roberts(image)
+sobel_im = sobel(image)
+scharr_im = scharr(image)
+prewitt_im = prewitt(image)
+canny_manual_im = cv2.Canny(image, 50,80)
+sigma = 0.3
+median = np.median(image)
+lower = int(max(0, (1-sigma)*median))
+upper = int(min(255, (1+sigma)*median))
+canny_auto_im = cv2.Canny(image, lower, upper)
+plt.figure(figsize = (24,12))
+plt.subplot(231)
+plt.imshow(image, cmap = 'gray')
+plt.subplot(232)
+plt.imshow(roberts_im, cmap = 'gray')
+plt.subplot(233)
+plt.imshow(sobel_im, cmap = 'gray')
+plt.subplot(234)
+plt.imshow(scharr_im, cmap = 'gray')
+plt.subplot(235)
+plt.imshow(prewitt_im, cmap = 'gray')
+plt.subplot(236)
+plt.imshow(canny_manual_im, cmap = 'gray')
+plt.show()
+#%% Fourier Transform
+#Outer regions represent high frequency components
+#Use a low pass filter
+image = cv2.imread(vz, 0)
+dft = cv2.dft(np.float32(image), flags=cv2.DFT_COMPLEX_OUTPUT)
+dft_shift = np.fft.fftshift(dft)
+magnitude_spectrum = 20 * np.log((cv2.magnitude(dft_shift[:, :, 0], dft_shift[:, :, 1]))+1)
+fig = plt.figure(figsize=(12, 12))
+ax1 = fig.add_subplot(2,2,1)
+ax1.imshow(image)
+ax1.title.set_text('Input Image')
+ax2 = fig.add_subplot(2,2,2)
+ax2.imshow(magnitude_spectrum, cmap = 'magma')
+ax2.title.set_text('FFT of image')
+plt.show()
+#%% Circular HPF mask - edge dectection but amplifies noise
+rows, cols = image.shape
+crow, ccol = int(rows / 2), int(cols / 2)
+mask = np.ones((rows, cols, 2), np.uint8)
+r = 5
+center = [crow, ccol]
+x, y = np.ogrid[:rows, :cols]
+mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
+mask[mask_area] = 0
+#%% Circular LPF mask - smooth regions and blus edges
+rows, cols = image.shape
+crow, ccol = int(rows / 2), int(cols / 2)
+mask = np.zeros((rows, cols, 2), np.uint8)
+r = 100
+center = [crow, ccol]
+x, y = np.ogrid[:rows, :cols]
+mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
+mask[mask_area] = 1
+#%% Band Pass Filter 
+rows, cols = image.shape
+crow, ccol = int(rows / 2), int(cols / 2)
+mask = np.zeros((rows, cols, 2), np.uint8)
+r_out = 80
+r_in = 10
+center = [crow, ccol]
+x, y = np.ogrid[:rows, :cols]
+mask_area = np.logical_and(((x - center[0]) ** 2 + (y - center[1]) ** 2 >= r_in ** 2),
+                           ((x - center[0]) ** 2 + (y - center[1]) ** 2 <= r_out ** 2))
+mask[mask_area] = 1
+#%%Inverse back to image domain
+fshift = dft_shift * mask
+fshift_mask_mag = 20 * np.log(cv2.magnitude(fshift[:, :, 0], fshift[:, :, 1]))
+f_ishift = np.fft.ifftshift(fshift)
+img_back = cv2.idft(f_ishift)
+img_back = cv2.magnitude(img_back[:, :, 0], img_back[:, :, 1])
+
+fig = plt.figure(figsize=(12, 12))
+ax1 = fig.add_subplot(2,2,1)
+ax1.imshow(image, cmap='gray')
+ax1.title.set_text('Input Image')
+ax2 = fig.add_subplot(2,2,2)
+ax2.imshow(magnitude_spectrum, cmap='gray')
+ax2.title.set_text('FFT of image')
+ax3 = fig.add_subplot(2,2,3)
+ax3.imshow(fshift_mask_mag, cmap='gray')
+ax3.title.set_text('FFT + Mask')
+ax4 = fig.add_subplot(2,2,4)
+ax4.imshow(img_back, cmap='gray')
+ax4.title.set_text('After inverse FFT')
+plt.show()
+#%% Histogram equalisation = stretching to improve contrast but noise gets enhanced
+img=cv2.imread(vz,1)
+lab_img= cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+img=cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+l, a, b = cv2.split(lab_img)
+equ = cv2.equalizeHist(l)
+updated_lab_img1 = cv2.merge((equ,a,b))
+hist_eq_img = cv2.cvtColor(updated_lab_img1, cv2.COLOR_LAB2BGR)
+hist_eq_img = cv2.cvtColor(hist_eq_img, cv2.COLOR_BGR2GRAY)
+clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+clahe_img = clahe.apply(l)
+updated_lab_img2 = cv2.merge((clahe_img,a,b))
+CLAHE_img = cv2.cvtColor(updated_lab_img2, cv2.COLOR_LAB2BGR)
+plt.figure(figsize = (16,12))
+plt.subplot(321)
+plt.imshow(img, cmap = 'gray') 
+plt.subplot(322)
+plt.hist(l.flat, bins=100, range=(0,255))
+plt.subplot(323)
+plt.imshow(hist_eq_img, cmap = 'gray')
+plt.subplot(324)
+plt.hist(equ.flat, bins=100, range=(0,255))
+plt.subplot(325)
+plt.imshow(clahe_img, cmap = 'gray')
+plt.subplot(326)
+plt.hist(clahe_img.flat, bins=100, range=(0,255))
+plt.show()
+#%% More Segmentation woo hoo
+#Automatic Thresholding
+image = cv2.imread(vz,1)
+blue_channel = image[:,:,0]
+ret2, thresh2 = cv2.threshold(blue_channel,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+regions1=np.digitize(blue_channel, bins=np.array([ret2]))
+plt.imshow(regions1, cmap = 'gray')
+plt.show()
+image = cv2.imread(vz,0)
+denoised_img = denoise_tv_chambolle(image, weight=0.1, eps=0.0002, n_iter_max=200, multichannel=False)
+plt.imshow(image, cmap='gray')
+plt.show()
+#plt.hist(image.flat, bins=100, range=(100,255))
+thresholds = threshold_multiotsu(image, classes=4)
+regions = np.digitize(image, bins=thresholds)
+plt.imshow(regions)
+plt.show()
+#can clean similar to above with binary opening/closing
+#%% Measurments
+image = img_as_ubyte(rgb2gray(io.imread(fname = vz)))
+plt.imshow(image)
+scale = 5
+threshold = threshold_otsu(image)
+thresholded_image = image < threshold
+plt.imshow(thresholded_image)
+
+#edge_touching_removed = clear_border(thresholded_image)
+#plt.imshow(edge_touching_removed)
+label_image = measure.label(thresholded_image, connectivity=image.ndim)
+plt.imshow(label_image)
+image_label_overlay = label2rgb(label_image, image=image)
+plt.imshow(image_label_overlay)
+
+all_props = measure.regionprops(label_image, image)
+for prop in all_props:
+    print('Label : {} Area: {}'.format(prop.label, prop.area))
+props = measure.regionprops_table(label_image, image, 
+                                  properties = ['label', 
+                                                'area', 
+                                                'equivalent_diameter',
+                                                'mean_intensity',
+                                                'solidity'])
+df = pd.DataFrame(props)
+print(df.head())
+df = df[df['area'] > 50]
+print(df.head())
+#Available regionprops: area, bbox, centroid, convex_area, coords, eccentricity,
+# equivalent diameter, euler number, label, intensity image, major axis length, 
+#max intensity, mean intensity, moments, orientation, perimeter, solidity, and many more

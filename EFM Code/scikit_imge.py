@@ -21,8 +21,13 @@ iz = p3ht.iz()
 ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
-
-
+#%%Other Molecule Test
+p3ht = main.molecule(iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff', 
+                     ia = 'P3HT 58k 11 5um 0V_190208_EFM Amplitude_Forward_001.tiff', 
+                     vz = 'P3HT 59k 11 Vdep 4V_210617_Z Height_Forward_021.tiff', 
+                     va = 'P3HT 59k 11 Vdep 4V_210617_EFM Amplitude_Forward_021.tiff')
+vz = p3ht.vz()
+va = p3ht.va()
 #%%Advanceed Workflow Ideas
 import skimage
 import skimage.feature
@@ -52,7 +57,7 @@ image_n = io.imread(vz, as_gray = True)
 plt.imshow(image_n)
 
 #%%invert image since function looks for dark
-image = 1 - image_n 
+image = 255 - image_n 
 #image = image_n
 #show inversion
 plt.imshow(image)
@@ -114,6 +119,14 @@ plt.imshow(image)
 for c in contours:
     plt.plot(c[:,1],c[:,0])
 #%%
+contours2 = contours
+#%%
+for c in contours:
+    plt.plot(c[:,1],c[:,0],color = 'red')
+
+for c in contours2:
+    plt.plot(c[:,1],c[:,0], color = 'blue')
+#%%
 regions = measure.regionprops(labels_masked)
 f,ax = plt.subplots()
 ax.hist([r.area for r in regions], bins = 50)
@@ -124,7 +137,7 @@ print("The percentage white region is:", np.sum(thresholded ==1)*100/(np.sum(thr
 #%% Attempt to use machine learning but not working yet 
 from keras import models, layers
 from keras.layers import Conv2D, MaxPooling2D, UpSampling2D
-M=76
+M=76, 75
 N=int(23.76*M)*2
 model = models.Sequential()
 model.add(
@@ -149,4 +162,3 @@ model.add(
             )
     )
 model.compile(loss='mse', optimizer='Adam', metrics=['accuracy'])
-    
