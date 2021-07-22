@@ -15,12 +15,10 @@ p3ht = main.molecule(
     )
 
 #%%
-p3ht.read_as_skimage()
-#iz = p3ht.iz()
-#main.plt.imshow
-p3ht.denoise_bilateral(auto = False, color_sig = [0.05, 0.05, 0.05, 0.05], distance_sig = [1,1,1,10])
-#p3ht.convert_to(conversion = 'to_8bit')
-p3ht.image()
+p3ht.basic_edge_detection(function = 'roberts')
+
+main.plt.imshow(p3ht.iz(), cmap = 'gray')
+
 #%% Read as gdal and be array for all 4 files (should work with either hashed out)
 gdal = p3ht.read_as_gdal()
 array = p3ht.bearray()

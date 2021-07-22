@@ -491,12 +491,169 @@ class molecule:
                                           multichannel=False)
            return specific
 
-    def denoise_nlm(self, specific = None):
+    def denoise_nlm(self,  auto = True, sig = [], to_float = True, specific = None):
+        """
+        Denoise the images using nlm function from skimage
+
+        Parameters
+        ----------
+        auto : BOOLEAN, optional
+            DESCRIPTION. The default is True.
+            If True, the function automatcially generates the values of sigma
+            If False, values of sigma can be manually entered into function
+        sig : NUMPY ARRAY or LIST, optional
+            DESCRIPTION. The default is [].
+            Values for the sigma of the denoising 
+        to_float : BOOLEAN, optional
+            DESCRIPTION. The default is True.
+            If True, converts the array of values to floats
+            If False, doesn't make the conversion - note function used requires float values
+        specific : STRING or ARRAY, optional
+            DESCRIPTION. The default is None.
+            Can be used to complete function on only one 
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        if specific is None:
+            if isinstance(self.__iz, str):
+                self.read_as_skimage()
+            if to_float is True:
+                self.convert_to(conversion = 'to_float')
+            if auto is True:
+                sig = np.array([
+                    np.mean(estimate_sigma(self.__iz, multichannel=True)),
+                    np.mean(estimate_sigma(self.__ia, multichannel=True)),
+                    np.mean(estimate_sigma(self.__vz, multichannel=True)), 
+                    np.mean(estimate_sigma(self.__va, multichannel=True))
+                    ])
+            self.__iz = denoise_nl_means(self.__iz, 
+                                         h=1.15*sig[0], 
+                                         fast_mode=True, 
+                                         patch_size=5, patch_distance=3, 
+                                         multichannel=False)
+            self.__ia = denoise_nl_means(self.__va, 
+                                         h=1.15*sig[1], 
+                                         fast_mode=True, 
+                                         patch_size=5, patch_distance=3, 
+                                         multichannel=False)
+            self.__vz = denoise_nl_means(self.__vz, 
+                                         h=1.15*sig[2], 
+                                         fast_mode=True, 
+                                         patch_size=5, patch_distance=3, 
+                                         multichannel=False)
+            self.__va = denoise_nl_means(self.__va, 
+                                         h=1.15*sig[3], 
+                                         fast_mode=True, 
+                                         patch_size=5, patch_distance=3, 
+                                         multichannel=False)
+            return self.__iz, self.__ia, self.__vz, self.__va
+        else:
+           if isinstance(specific, str):
+                specific = self.read_as_skimage(specific=specific)
+           if to_float is True:
+                specific = self.convert_to(conversion = 'to_float', specific = specific)
+           if auto is True:
+                sig = np.array([
+                    np.mean(estimate_sigma(specific, multichannel=True))])
+           specific = denoise_nl_means(specific, 
+                                         h=1.15*sig[0], 
+                                         fast_mode=True, 
+                                         patch_size=5, patch_distance=3, 
+                                         multichannel=False)
+           return specific
+     
+    def denoise_total_variance(self, auto = True, weight = [], to_float = True, specific = None):
+        """
+        Denoise the images using nlm function from skimage
+
+        Parameters
+        ----------
+        auto : BOOLEAN, optional
+            DESCRIPTION. The default is True.
+            If True, the function automatcially generates the values of sigma
+            If False, values of sigma can be manually entered into function
+        weight : NUMPY ARRAY or LIST, optional
+            DESCRIPTION. The default is [].
+            Values for the weight of denoising
+        to_float : BOOLEAN, optional
+            DESCRIPTION. The default is True.
+            If True, converts the array of values to floats
+            If False, doesn't make the conversion - note function used requires float values
+        specific : STRING or ARRAY, optional
+            DESCRIPTION. The default is None.
+            Can be used to complete function on only one 
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        if specific is None:
+            if isinstance(self.__iz, str):
+                self.read_as_skimage()
+            if to_float is True:
+                self.convert_to(conversion = 'to_float')
+            if auto is True:
+                weight = [0.1,0.1,0.1,0.1]
+            self.__iz = denoise_tv_chambolle(self.__iz, 
+                                             weight=weight[0], eps=0.0002,
+                                             n_iter_max=200, multichannel=False)
+            self.__ia = denoise_tv_chambolle(self.__ia, 
+                                             weight=weight[1], eps=0.0002,
+                                             n_iter_max=200, multichannel=False)
+            self.__vz = denoise_tv_chambolle(self.__iv, 
+                                             weight=weight[2], eps=0.0002,
+                                             n_iter_max=200, multichannel=False)
+            self.__va = denoise_tv_chambolle(self.__va, 
+                                             weight=weight[3], eps=0.0002,
+                                             n_iter_max=200, multichannel=False)
+            return self.__iz, self.__ia, self.__vz, self.__va
+        else:
+           if isinstance(specific, str):
+                specific = self.read_as_skimage(specific=specific)
+           if to_float is True:
+                specific = self.convert_to(conversion = 'to_float', specific = specific)
+           if auto is True:
+                weight = [0.1]
+           specific = denoise_tv_chambolle(specific, 
+                                             weight=weight[0], eps=0.0002,
+                                             n_iter_max=200, multichannel=False)
+           return specific
+       
+    def basic_edge_detection(self, function = 'sobel', specific = None):
+        edges_str = ['roberts', 'sobel', 'scharr', 'prewitt']
+        edges = [roberts, sobel, scharr, prewitt]
+        if specific is None:
+            if isinstance(self.__iz, str):
+                self.read_as_skimage(gray = True)
+            index = edges_str.index(function)
+            self.__iz = edges[index](self.__iz)
+            self.__ia = edges[index](self.__ia)
+            self.__vz = edges[index](self.__vz)
+            self.__va = edges[index](self.__va)
+            return self.__iz, self.__ia, self.__vz, self.__va
+        else: 
+            if isinstance(specific, str):
+                specific = self.read_as_skimage(specific = specific, gray = True)
+            index = edges_str.index(function)
+            specific = edges[index](specific)
+            return specific
+       
+  #  def canny_edges(self, option = auto, specific = None):
         
-        nlm_using_skimage = denoise_nl_means(image, h=1.15*sigma_est, fast_mode=True, patch_size=5, patch_distance=3, multichannel=False)
+           
+
+#canny_manual_im = cv2.Canny(image, 50,80)
+#sigma = 0.3
+#median = np.median(image)
+#lower = int(max(0, (1-sigma)*median))
+#upper = int(min(255, (1+sigma)*median))
+#canny_auto_im = cv2.Canny(image, lower, upper)
         
-        
-        
-        
-        
-        
+  
+    

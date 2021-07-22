@@ -465,9 +465,10 @@ plt.imshow(nlm_using_skimage)
 plt.show()
 #%%Denoise using Total Variance 
 imgage = img_as_float(io.imread(vz, as_gray=True))
-plt.hist(image.flat, bins=100, range=(0,1))
+plt.hist(image.flat, bins=100)#, range=(0,1))
+plt.show()
 denoise_variance = denoise_tv_chambolle(imgage, weight=0.1, eps=0.0002, n_iter_max=200, multichannel=False)
-plt.hist(denoise_variance.flat, bins=100, range=(0,1))  
+plt.hist(denoise_variance.flat, bins=100)#, range=(0,1))  
 plt.show()
 plt.figure(figsize = (12,6))
 plt.subplot(121)
@@ -481,7 +482,7 @@ plt.show()
 #Scharr = Similar to Sobel but x and y are independent 
 #Prewitt = Faster than Sobel
 #canny - can be automated or not automated depending similar to above 
-image = cv2.imread(vz, 0)
+image = cv2.imread(iz, 0)
 roberts_im = roberts(image)
 sobel_im = sobel(image)
 scharr_im = scharr(image)
