@@ -73,17 +73,24 @@ plt.imshow(denoised)
 from skimage import exposure
 image_g = exposure.adjust_gamma(denoised, 0.7)
 plt.imshow(image_g)
+
 #%%Threshold decesicion - can attempt to automate this with algorithms later
 t = 0.5
 thresholded = (image_g <= t)
 plt.imshow(thresholded)
+#%%
 #try filters to estimate value for threshold
 from skimage import filters
-#filters.try_all_threshold(image_g)
+filters.try_all_threshold(image_g)
+t = filters.threshold_li(image_g)
+#%%
+thresholded = (image_g <= t)
+plt.imshow(thresholded)
+
 #%%distance from maximum points to minimum points
 from skimage import segmentation, morphology, color
 distance = ndi.distance_transform_edt(thresholded)
-plt.imshow(exposure.adjust_gamma(distance,0.5))
+plt.imshow(exposure.adjust_gamma(distance,t))
 plt.title('Distance to background map')
 #%%maxima_local 
 local_maxima = morphology.local_maxima(distance)
@@ -106,18 +113,21 @@ f, (axo,ax1,ax2) = plt.subplots(1,3)
 axo.imshow(thresholded)
 ax1.imshow(np.log(1 + distance))
 ax2.imshow(shuffle_labels(labels), cmap = 'magma')
+
 #%%colours won't overrun
 labels_masked = segmentation.watershed(thresholded,markers,mask = thresholded, connectivity = 2)
 f, (axo,ax1,ax2) = plt.subplots(1,3)
 axo.imshow(thresholded)
 ax1.imshow(np.log(1 + distance))
 ax2.imshow(shuffle_labels(labels_masked), cmap = 'magma')
+
 #%%plot contors over the top so can see circles around region
 from skimage import measure
-contours = measure.find_contours(labels_masked,level = 0.5)
+contours = measure.find_contours(labels_masked,level = t)
 plt.imshow(image)
 for c in contours:
     plt.plot(c[:,1],c[:,0])
+
 #%%
 contours2 = contours
 #%%
@@ -129,7 +139,7 @@ for c in contours2:
 #%%
 regions = measure.regionprops(labels_masked)
 f,ax = plt.subplots()
-ax.hist([r.area for r in regions], bins = 50)
+ax.hist([r.area for r in regions], bins = 50, range = (0,1200))
 #maybe delete bins for super small 
 #%%
 print("The percentage white region is:", np.sum(thresholded ==1)*100/(np.sum(thresholded ==0) + np.sum(thresholded ==1)))
@@ -162,3 +172,89 @@ model.add(
             )
     )
 model.compile(loss='mse', optimizer='Adam', metrics=['accuracy'])
+
+#%%
+def f_c(i):
+    #import
+    im = io.imread(i, as_gray = True)
+    #invert -adjust for efm/z depending on start
+    image = 255 - im
+    #denoise
+    denoised = ndi.median_filter(util.img_as_float(image), size = 5)
+    #increase exposure
+    image_g = exposure.adjust_gamma(denoised, 0.7)
+    #thresholding
+    t = filters.threshold_otsu(image_g)
+    thresholded = (image_g <= t)
+    #distance map
+    distance = ndi.distance_transform_edt(thresholded)
+    local_maxima = morphology.local_maxima(distance)
+    markers = ndi.label(local_maxima)[0]
+    labels_masked = segmentation.watershed(thresholded,markers,mask = thresholded, connectivity = 2)
+    contours = measure.find_contours(labels_masked,level = t)
+    return contours
+
+def f_c_i(i):
+    #import
+    im = io.imread(i, as_gray = True)
+    #invert -adjust for efm/z depending on start
+    image = im
+    #denoise
+    denoised = ndi.median_filter(util.img_as_float(image), size = 5)
+    #increase exposure
+    image_g = exposure.adjust_gamma(denoised, 0.7)
+    #thresholding
+    t = filters.threshold_otsu(image_g)
+    thresholded = (image_g <= t)
+    #distance map
+    distance = ndi.distance_transform_edt(thresholded)
+    local_maxima = morphology.local_maxima(distance)
+    markers = ndi.label(local_maxima)[0]
+    labels_masked = segmentation.watershed(thresholded,markers,mask = thresholded, connectivity = 2)
+    contours = measure.find_contours(labels_masked,level = t)
+    return contours
+
+image = io.imread(va, as_gray = True) 
+
+plt.imshow(image)
+con_one = f_c(va)
+con_two = f_c_i(va)
+for c in con_one:
+    plt.plot(c[:,1],c[:,0])
+for c in con_two:
+    plt.plot(c[:,1],c[:,0])
+#%%
+image = io.imread(vz, as_gray = True) 
+plt.imshow(image, cmap = 'gray')
+from mpl_toolkits.mplot3d import Axes3D
+x = np.linspace(0,-255, 256)
+y = np.linspace(0, 255, 256)
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.contour3D(x, y, image, 150, cmap='magma')
+ax.view_init(45, 45)
+fig
+#%%
+import cv2
+image = io.imread(vz, as_gray = True) 
+plt.imshow(image, cmap = 'gray')
+#contours = plt.contour(image, cmap = 'magma')
+#contours = measure.find_contours(image, 200)
+for c in contours:
+    plt.plot(c[:,1], c[:,0])
+#%%
+image = io.imread(vz, as_gray = True) 
+empty = np.empty((256,256))
+for i in list(range(0,255)):
+    a = list(range(0,255))
+    empty[i] = np.append(empty,[a])
+
+print(empty)
+
+#plt.imshow(image, cmap = 'gray')
+#plt.imshow(image, interpolation = 'none')
+
+
+
+
+

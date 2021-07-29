@@ -137,6 +137,7 @@ main.plt.show()
 #%% Normalise to between 0 and 1
 #Its also possible to give a Gaussian Distrubution if that's helpful 
 #https://machinelearningmastery.com/how-to-manually-scale-image-pixel-data-for-deep-learning/
+p3ht.bearray()
 iz = p3ht.iz()
 print('shape:',iz.shape)
 print('Data Type: %s' % iz.dtype)

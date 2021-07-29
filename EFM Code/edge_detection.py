@@ -109,15 +109,17 @@ ax.hist(image.ravel(), bins=256, range=[0,1])
 ax.set_xlim(0,1)
 threshold = 0.6 # or
 # can use filter to determine threshold point e.g.filters.threshold_sauvola(image)
-image_show(image > threshold)
+fig, ax = plt.subplots(1,1)
+ax.hist(image.ravel(), bins=256, range=[0.6,1])
+ax.set_xlim(0,1)
 #%%More Segementation
 import scipy.ndimage as nd
-image = skimage.io.imread(vz, as_gray = True)
+image = skimage.io.imread(va, as_gray = True)
 image = img_as_float(image)
-segm1 = (image <= 0.01)
-segm2 = (image > 0.01) & (image <= 0.08)
-segm3 = (image > 0.08) & (image <= 0.5)
-segm4 = (image > 0.5) 
+segm1 = (image <= 0.25)
+segm2 = (image > 0.25) & (image <= 0.5)
+segm3 = (image > 0.5) & (image <= 0.75)
+segm4 = (image > 0.75) 
 all_segments = np.zeros((image.shape[0], image.shape[1], 3))
 all_segments[segm1] = (1,0,0) # red
 all_segments[segm2] = (0,1,0) # green
@@ -144,10 +146,10 @@ from skimage.exposure import rescale_intensity
 import skimage
 filename = vz
 image = skimage.io.imread(fname=filename, as_gray=True)
-image = rescale_intensity(image, in_range=(0,1), out_range=(-1,1))
+image = rescale_intensity(image, in_range=(0,256), out_range=(-1,1))
 markers = np.zeros(image.shape, dtype=np.uint)
-markers[image<-0.5]=1
-markers[image>0.5] =2
+markers[image<-0.2]=1
+markers[image>0.2] =2
 labels = random_walker(image, markers, beta=10, mode='bf')
 
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(8, 3.2),
@@ -168,7 +170,7 @@ plt.show()
 #%%Flood Fill - experiment with seed point, tolerance and alpha 
 #high alpha seems to split into 3 different regions
 filename = vz
-image = skimage.io.imread(fname=filename, as_gray=True)
+image = img_as_float(skimage.io.imread(fname=filename, as_gray=True))
 seed_point = (100, 220)
 flood_mask = seg.flood(image, seed_point, tolerance = 0.3)
 fig,ax = image_show(image, cmap = 'gray')
@@ -179,16 +181,14 @@ filename = vz
 image = skimage.io.imread(fname=filename, as_gray=True)
 image_show(image)
 chan_vese = seg.chan_vese(image)
-
 fig, ax = image_show(image)
 ax.imshow(chan_vese == 0, alpha=-0.3, cmap='gray');
-
 filename = va
 image2 = skimage.io.imread(fname=filename, as_gray=True)
 image_show(image2)
 chan_vese2 = seg.chan_vese(image2)
 fig, ax = image_show(image2)
-ax.imshow(chan_vese2 == 0, alpha=2);#-0.05);
+ax.imshow(chan_vese2 == 0, alpha=2, cmap = 'gray');#-0.05);
 #adjust and save image such that maybe do edge detction after this fill function?
 #%%Difference filter in 2D
 import scipy.ndimage as ndi
@@ -221,7 +221,7 @@ def imshow_all(*images, titles=None):
     fig, axes = plt.subplots(nrows=1, ncols=ncols,
                              figsize=(width, height))
     for ax, img, label in zip(axes.ravel(), images, titles):
-        ax.imshow(img, vmin=vmin, vmax=vmax)
+        ax.imshow(img, vmin=vmin, vmax=vmax, cmap = 'gray')
         ax.set_title(label)
 imshow_all(image, filters.sobel(image))
 pixelated_gradient = filters.sobel(image)
@@ -260,7 +260,7 @@ plt.show(hist)
 #Apeer_Micro Course Follow Through 
 import cv2 
 import skimage
-from skimage import io, img_as_float, img_as_ubyte, color, filters, feature, measure
+from skimage import io, img_as_float, img_as_ubyte, color, filters, feature, measure, exposure, util, 
 from skimage.transform import rescale,resize, downscale_local_mean
 from skimage.filters import gaussian, sobel, unsharp_mask, median, roberts, scharr, prewitt, threshold_multiotsu, threshold_otsu
 from skimage.morphology import disk
@@ -408,10 +408,10 @@ image = io.imread(vz, as_gray=True)
 #Radius affects blurring
 #Amount affects multiplication factor for original-blurred
 unsharped_image = unsharp_mask(image,radius=3,amount=2)
-plt.figure(figsize=(6, 12))
-plt.subplot(211) 
+plt.figure(figsize=(12, 6))
+plt.subplot(121) 
 plt.imshow(image, cmap='gray')
-plt.subplot(212)
+plt.subplot(122)
 plt.imshow(unsharped_image, cmap = 'gray')
 plt.show()
 #%%Denoising with Gaussian
@@ -482,13 +482,13 @@ plt.show()
 #Scharr = Similar to Sobel but x and y are independent 
 #Prewitt = Faster than Sobel
 #canny - can be automated or not automated depending similar to above 
-image = cv2.imread(iz, 0)
+image = cv2.imread(va, 0)
 roberts_im = roberts(image)
 sobel_im = sobel(image)
 scharr_im = scharr(image)
 prewitt_im = prewitt(image)
-canny_manual_im = cv2.Canny(image, 50,80)
-sigma = 0.3
+canny_manual_im = cv2.Canny(image, 150,150)
+sigma = 1.5
 median = np.median(image)
 lower = int(max(0, (1-sigma)*median))
 upper = int(min(255, (1+sigma)*median))
@@ -505,18 +505,19 @@ plt.imshow(scharr_im, cmap = 'gray')
 plt.subplot(235)
 plt.imshow(prewitt_im, cmap = 'gray')
 plt.subplot(236)
-plt.imshow(canny_manual_im, cmap = 'gray')
+plt.imshow(canny_auto_im, cmap = 'gray')
 plt.show()
 #%% Fourier Transform
 #Outer regions represent high frequency components
 #Use a low pass filter
 image = cv2.imread(vz, 0)
+
 dft = cv2.dft(np.float32(image), flags=cv2.DFT_COMPLEX_OUTPUT)
 dft_shift = np.fft.fftshift(dft)
 magnitude_spectrum = 20 * np.log((cv2.magnitude(dft_shift[:, :, 0], dft_shift[:, :, 1]))+1)
 fig = plt.figure(figsize=(12, 12))
 ax1 = fig.add_subplot(2,2,1)
-ax1.imshow(image)
+ax1.imshow(image, cmap = 'gray')
 ax1.title.set_text('Input Image')
 ax2 = fig.add_subplot(2,2,2)
 ax2.imshow(magnitude_spectrum, cmap = 'magma')
@@ -526,7 +527,7 @@ plt.show()
 rows, cols = image.shape
 crow, ccol = int(rows / 2), int(cols / 2)
 mask = np.ones((rows, cols, 2), np.uint8)
-r = 5
+r = 3
 center = [crow, ccol]
 x, y = np.ogrid[:rows, :cols]
 mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
@@ -563,10 +564,10 @@ ax1 = fig.add_subplot(2,2,1)
 ax1.imshow(image, cmap='gray')
 ax1.title.set_text('Input Image')
 ax2 = fig.add_subplot(2,2,2)
-ax2.imshow(magnitude_spectrum, cmap='gray')
+ax2.imshow(magnitude_spectrum, cmap='magma')
 ax2.title.set_text('FFT of image')
 ax3 = fig.add_subplot(2,2,3)
-ax3.imshow(fshift_mask_mag, cmap='gray')
+ax3.imshow(fshift_mask_mag, cmap='magma')
 ax3.title.set_text('FFT + Mask')
 ax4 = fig.add_subplot(2,2,4)
 ax4.imshow(img_back, cmap='gray')
@@ -585,19 +586,20 @@ clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
 clahe_img = clahe.apply(l)
 updated_lab_img2 = cv2.merge((clahe_img,a,b))
 CLAHE_img = cv2.cvtColor(updated_lab_img2, cv2.COLOR_LAB2BGR)
+CLAHE_img = cv2.cvtColor(CLAHE_img, cv2.COLOR_BGR2GRAY)
 plt.figure(figsize = (16,12))
 plt.subplot(321)
 plt.imshow(img, cmap = 'gray') 
-plt.subplot(322)
+plt.subplot(322) 
 plt.hist(l.flat, bins=100, range=(0,255))
 plt.subplot(323)
-plt.imshow(hist_eq_img, cmap = 'gray')
+plt.imshow(clahe_img)#hist_eq_img, cmap = 'gray')
 plt.subplot(324)
 plt.hist(equ.flat, bins=100, range=(0,255))
 plt.subplot(325)
-plt.imshow(clahe_img, cmap = 'gray')
+plt.imshow(CLAHE_img, cmap = 'gray')
 plt.subplot(326)
-plt.hist(clahe_img.flat, bins=100, range=(0,255))
+plt.hist(CLAHE_img.flat, bins=100, range=(0,255))
 plt.show()
 #%% More Segmentation 
 #Automatic Thresholding
@@ -609,12 +611,12 @@ plt.imshow(regions1, cmap = 'gray')
 plt.show()
 image = cv2.imread(vz,0)
 denoised_img = denoise_tv_chambolle(image, weight=0.1, eps=0.0002, n_iter_max=200, multichannel=False)
-plt.imshow(image, cmap='gray')
+plt.imshow(image, cmap='magma')
 plt.show()
 #plt.hist(image.flat, bins=100, range=(100,255))
 thresholds = threshold_multiotsu(image, classes=4)
 regions = np.digitize(image, bins=thresholds)
-plt.imshow(regions)
+plt.imshow(regions, cmap = 'magma')
 plt.show()
 #can clean similar to above with binary opening/closing
 #%% Measurments
@@ -648,3 +650,118 @@ print(df.head())
 #Available regionprops: area, bbox, centroid, convex_area, coords, eccentricity,
 # equivalent diameter, euler number, label, intensity image, major axis length, 
 #max intensity, mean intensity, moments, orientation, perimeter, solidity, and many more
+
+#%%
+image = img_as_float(skimage.io.imread(fname = va, as_gray = False))
+
+through = []
+def run_through(image, no_of_sections):
+    intervals = np.linspace(0, 1, no_of_sections)
+    for i in range(0,no_of_sections-1):
+        mask = np.ma.masked_outside(image, intervals[i], intervals[1+i])
+        through.append(mask)
+build = []   
+def build_up(image, no_of_sections):
+    intervals = np.linspace(0, 1, no_of_sections)
+    for i in range(0,no_of_sections):
+        mask = np.ma.masked_greater(image, intervals[i])
+        build.append(mask)
+dig = []
+def dig_up(image, no_of_sections):
+    interval = np.linspace(0, 1, no_of_sections)
+    intervals = np.flip(interval)
+    for i in range(0,no_of_sections):
+        mask = np.ma.masked_less_equal(image, intervals[i])
+        dig.append(mask)
+#%%
+run_through(image, 10)
+build_up(image, 9)
+dig_up(image, 9)
+for i in range(0, len(through)):
+    fig, ax = plt.subplots()
+    ax.imshow(image, cmap = 'gray')
+    ax.imshow(through[i], cmap = 'magma', interpolation = 'none')
+
+for i in range(0, len(build)):
+    fig, ax = plt.subplots()
+    ax.imshow(image, cmap = 'gray')
+    ax.imshow(build[i], cmap = 'magma', interpolation = 'none')
+    
+for i in range(0, len(dig)):
+    fig, ax = plt.subplots()
+    ax.imshow(image, cmap = 'gray')
+    ax.imshow(dig[i], cmap = 'magma', interpolation = 'none')
+#%%
+dig = []
+image_vz = img_as_float(skimage.io.imread(fname = vz, as_gray = False))
+dig_up(image_vz, 10)
+build_vz = dig
+dig = []
+image_va = img_as_float(skimage.io.imread(fname = va, as_gray = False))
+dig_up(image_va, 10)
+for i in range(0, len(dig)):
+    fig,( ax1, ax2) = plt.subplots(1,2)
+    ax1.imshow(image_vz, cmap = 'gray')
+    ax1.imshow(build_vz[i], cmap = 'magma', interpolation = 'none')
+    ax2.imshow(image_va, cmap = 'gray')
+    ax2.imshow(dig[i], cmap = 'magma', interpolation = 'none')
+    plt.show()
+#%%
+plt.imshow(dig[1], cmap = 'winter', interpolation = 'none')
+plt.imshow(build_vz[1], cmap = 'magma', interpolation = 'none')
+efm = dig[1]
+z_height = build_vz[1]
+for c in contours:
+    plt.plot(c[:,1],c[:,0], color = 'blue')
+print(contours)
+print(len(contours))
+#%%
+
+for i in range(0, len( contours)):
+    cimg = np.zeros_like(efm)
+    cv2.drawContours(cimg, contours, i, color=255, thickness = -1)
+    pts = np.where(cimg == 255)
+    lst_intensities.append(img[pts[0], pts[1]])
+#%%
+import math
+import matplotlib.path
+import numpy as np
+
+for c in contours:
+    polygon = np.array(c)
+    left = np.min(polygon, axis=0)
+    right = np.max(polygon, axis=0)
+    x = np.arange(math.ceil(left[0]), math.floor(right[0])+1)
+    y = np.arange(math.ceil(left[1]), math.floor(right[1])+1)
+    xv, yv = np.meshgrid(x, y, indexing='xy')
+    points = np.hstack((xv.reshape((-1,1)), yv.reshape((-1,1))))
+    
+    path = matplotlib.path.Path(polygon)
+    mask = path.contains_points(points)
+    mask.shape = xv.shape
+    plt.plot(c[:,1],c[:,0], color = 'blue')
+#%%
+from skimage import data, img_as_float
+from skimage.metrics import structural_similarity as ssim
+from skimage.metrics import mean_squared_error
+img_vz = build_vz[4]# img_as_float(io.imread(fname = vz, as_gray = False))
+img_va = dig[4] #img_as_float(io.imread(fname = va, as_gray = False))
+#img_va = 1 - img_va
+rows,cols = img_vz.shape
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize = (12,6))
+ax = axes.ravel()
+
+mse_vz = mean_squared_error(img_vz, img_vz)
+ssim_vz = ssim(img_vz, img_vz, data_range = img_vz.max() - img_vz.min())
+mse_va = mean_squared_error(img_vz, img_va)
+ssim_va = ssim(img_vz, img_va, data_range = img_va.max() - img_va.min())
+
+label = 'MSE: {:.2f}, SSIM: {:.2f}'
+ax[0].imshow(img_vz, cmap = 'gray')
+ax[0].set_xlabel(label.format(mse_vz, ssim_vz))
+ax[1].imshow(img_va, cmap = 'gray')
+ax[1].set_xlabel(label.format(mse_va, ssim_va))
+plt.tight_layout()
+plt.show()
+
+

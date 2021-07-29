@@ -6,6 +6,7 @@ Created on Mon Jul 12 12:36:49 2021
 """
 
 import main
+
 #%% Create object using P3HT 11 
 p3ht = main.molecule(
     iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff', 
@@ -15,9 +16,19 @@ p3ht = main.molecule(
     )
 
 #%%
-p3ht.basic_edge_detection(function = 'roberts')
+a,b,c,d = p3ht.find_contours()
+p3ht.read_as_skimage()
+main.plt.imshow(p3ht.iz())
+for con in a:
+    main.plt.plot(con[:,1],con[:,0])
 
-main.plt.imshow(p3ht.iz(), cmap = 'gray')
+#%%
+p3ht.high_pass_filter(r = 3)
+p3ht.spatial_domain()
+p3ht.image_show(p3ht.iz(), cmap = 'magma')
+p3ht.image_show(p3ht.ia(), cmap = 'magma')
+p3ht.image_show(p3ht.vz(), cmap = 'magma')
+p3ht.image_show(p3ht.va(), cmap = 'magma')
 
 #%% Read as gdal and be array for all 4 files (should work with either hashed out)
 gdal = p3ht.read_as_gdal()
