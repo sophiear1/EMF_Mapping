@@ -45,14 +45,14 @@ def image_show(image, nrows=1, ncols=1, cmap='gray', **kwargs):
     ax.imshow(image, cmap='gray')
     ax.axis('off')
     return fig, ax
-filename = vz # file
+filename = va # file
 image = skimage.io.imread(fname=filename, as_gray=True) #read file
 image_show(image) # another way to view
 #%%
 #import image
 import skimage
 from skimage import io
-image_n = io.imread(vz, as_gray = True) 
+image_n = io.imread(va, as_gray = True) 
 #show image
 plt.imshow(image_n)
 
@@ -75,7 +75,7 @@ image_g = exposure.adjust_gamma(denoised, 0.7)
 plt.imshow(image_g)
 
 #%%Threshold decesicion - can attempt to automate this with algorithms later
-t = 0.5
+t = 0.4
 thresholded = (image_g <= t)
 plt.imshow(thresholded)
 #%%
@@ -124,12 +124,21 @@ ax2.imshow(shuffle_labels(labels_masked), cmap = 'magma')
 #%%plot contors over the top so can see circles around region
 from skimage import measure
 contours = measure.find_contours(labels_masked,level = t)
+#image = 255-image
 plt.imshow(image)
 for c in contours:
     plt.plot(c[:,1],c[:,0])
 
 #%%
+image = io.imread(vz, as_gray = True) 
+#image2 = image
+print(labels_masked)
 contours2 = contours
+for i in image2:
+    if labels_masked[i] = 0:
+        image2[i] = 0
+
+
 #%%
 for c in contours:
     plt.plot(c[:,1],c[:,0],color = 'red')
@@ -227,34 +236,456 @@ for c in con_two:
 image = io.imread(vz, as_gray = True) 
 plt.imshow(image, cmap = 'gray')
 from mpl_toolkits.mplot3d import Axes3D
-x = np.linspace(0,-255, 256)
-y = np.linspace(0, 255, 256)
-fig = plt.figure()
+x = np.linspace(0,-1, 256)
+y = np.linspace(0, 1, 256)
+fig = plt.figure(figsize = [16,16])
 ax = fig.gca(projection='3d')
 ax.contour3D(x, y, image, 150, cmap='magma')
-ax.view_init(45, 45)
+ax.view_init(60, 60)
 fig
 #%%
-import cv2
-image = io.imread(vz, as_gray = True) 
-plt.imshow(image, cmap = 'gray')
-#contours = plt.contour(image, cmap = 'magma')
-#contours = measure.find_contours(image, 200)
-for c in contours:
-    plt.plot(c[:,1], c[:,0])
+
+x ,y= np.meshgrid(np.linspace(0,-1, 256),np.linspace(0, 1, 256))
+fig = plt.figure(figsize = [16,16])
+ax = fig.gca(projection='3d')
+ax.plot_surface(x, y, Z1_masked, cmap='magma')
+ax.view_init(60, 60)
+fig
+from skimage import img_as_float, io
+image = img_as_float(io.imread(vz, as_gray = True)) 
+a = uneven_through(image, 0.363,0.78)
+
 #%%
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from skimage import img_as_float, io
+import numpy as np
+image = img_as_float(io.imread(vz, as_gray = True)) 
+a = uneven_through(image, 0.363,0.78)
+
+Z1_masked = a[0]
+for i in range(0,len(Z1_masked)):
+    for p in range(0,256):
+        if isinstance(Z1_masked[i][p], np.ma.core.MaskedConstant):
+            Z1_masked[i][p] = 0
+Z2_masked = a[1]
+for i in range(0,len(Z2_masked)):
+    for p in range(0,256):
+        if isinstance(Z2_masked[i][p], np.ma.core.MaskedConstant):
+            Z2_masked[i][p] = 0.363
+Z3_masked = a[2]
+for i in range(0,len(Z3_masked)):
+    for p in range(0,256):
+        if isinstance(Z3_masked[i][p], np.ma.core.MaskedConstant):
+            Z3_masked[i][p] = 0.78
+            
+x_mg, y_mg = np.meshgrid(np.linspace(0,-1, 256), np.linspace(0,1,256))
+fig = plt.figure(figsize = (50,20))
+ax = fig.add_subplot(1,3,1, projection = '3d')
+surf = ax.plot_surface(x_mg, y_mg, Z1_masked, vmin = 0, vmax = 0.5,cmap = 'magma', linewidth = 0,antialiased = False)
+cset = ax.contour(x_mg, y_mg, Z1_masked, zdir='z', offset=-1, cmap='winter')
+ax.set_zlim(-1, 1)
+ax.view_init(30, 45)
+
+ax = fig.add_subplot(1,3,2, projection = '3d')
+surf = ax.plot_surface(x_mg, y_mg, Z2_masked, vmin = 0, vmax = 1, cmap = 'magma', linewidth = 0,antialiased = False)
+cset = ax.contour(x_mg, y_mg, Z2_masked, zdir='z', offset=-1, cmap='winter')
+ax.set_zlim(-1, 1)
+ax.view_init(30, 45)
+
+ax = fig.add_subplot(1,3,3, projection = '3d')
+surf = ax.plot_surface(x_mg, y_mg, Z3_masked, vmin = 0.5, vmax = 1, cmap = 'magma', linewidth = 0,antialiased = False)
+#surf = ax.contour3D(x, y, Z3_masked, 150, cmap='magma')
+cset = ax.contour(x_mg, y_mg, Z3_masked, zdir='z', offset=-1, cmap='winter')
+#cset = ax.contour(x_mg, y_mg, Z3_masked, zdir='x', offset=0, cmap='winter')
+#cset = ax.contour(x_mg, y_mg, Z3_masked, zdir='y', offset=0, cmap='winter')
+ax.set_zlim(-1, 1)
+
+ax.view_init(30, 45)
+fig.colorbar(surf)
+plt.show()
+#%%
+import matplotlib as mpl
+image = img_as_float(io.imread(vz, as_gray = True)) 
+im_va = img_as_float(io.imread(va, as_gray = True))
+a = uneven_through(im_va, 0.1, 0.99)
+E3_masked = a[2]
+#cmap, norm = mpl.colors.from_levels_and_colors([0], ['white'])
+x_mg, y_mg = np.meshgrid(np.linspace(0,-1, 256), np.linspace(0,1,256))
+x, y = np.linspace(0,-1, 256), np.linspace(0,1,256)
+for i in range(0,len(E3_masked)):
+    for p in range(0,256):
+        if isinstance(E3_masked[i][p], np.ma.core.MaskedConstant):
+            E3_masked[i][p] = False
+
+E3_masked = E3_masked*1
+fig = plt.figure(figsize = (20,20))
+ax = fig.add_subplot(1,1,1, projection = '3d')
+image = image
+#cset = ax.plot_surface(x_mg, y_mg, image, cmap='plasma')
+#surf = ax.plot_surface(x_mg, y_mg, E3_masked, vmin = 0.78, cmap = 'twilight', linewidth = 0,antialiased = False)
+#zheight = ax.plot(image, cmap = 'magma')
+#cset = ax.contour(x_mg, y_mg, image, zdir='z', offset=0, cmap='plasma')
+surf = ax.contour3D(x, y, E3_masked, 150, vmin = 0, vmax = 10, cmap ='winter', alpha = 0.2)
+cset = ax.contour3D(x, y, image, 150,cmap='plasma')
+
+ax.set_zlim3d(0, 3)
+#ax.view_init(45, 60)
+#%%
+for angle in range(0, 360):
+    ax.view_init(30, angle)
+    plt.draw()
+    plt.pause(.001)
+
+#%%
+fig = plt.figure()
+ax1 = fig.add_subplot(111, projection = '3d')
+x, y = np.linspace(0,-1, 256), np.linspace(0,1,256)
+#xx, yy = np.meshgrid(x, y)
+#x, y = xx.ravel(), yy.ravel()
+width = depth = (1/256)
+bottom = np.zeros_like(E3_masked)
+ax1.bar3d(x,y,bottom, width, depth, E3_masked, shade = False)
+
+
+#%%
+import plotly.graph_objects as go
+contours2 = contours
+contours2 = [x.astype(int) for x in contours2]
+labels = []
+for c in contours2:
+    label = measure.label(c)
+    labels.append(label)
+for index in range(1, labels.max()):
+    cont = measure.find_contours(labels == label, 0.5)[0]
+    y,x = cont.T()
+    fig.add_trace(go.Scatter(x=x, y=y))
+    
+
+#%%
+import cv2
+contours2=contours
 image = io.imread(vz, as_gray = True) 
-empty = np.empty((256,256))
-for i in list(range(0,255)):
-    a = list(range(0,255))
-    empty[i] = np.append(empty,[a])
+lst_intensities = []
+#for i in contours2:
+    # Create a mask image that contains the contour filled in
+#    cimg = np.zeros_like(image)
+#    cimg = plt.plot(i[:,1], i[:,0], color = 'black')
+#    pts = np.where(cimg == 256)
+    #lst_intensities.append(image[pts[0], pts[1]])
 
+empty = []
+w,h = 256, 256;
+empty = np.array([[0 for x in range(w)] for y in range(h)])
 print(empty)
+contours2 = contours
+contours2 = [x.astype(int) for x in contours]
+fig = plt.figure(figsize = (256, 256))
+for con in contours2:
+    empty[con[:,1], con[:,0]] = 256
+    ax = plt.fill(con[:,1], con[:,0])
+plt.axis('off')
+#%%
+plt.savefig('tester.png')
+area = io.imread(fname = 'tester.png', as_gray = True)
+plt.imshow(area)
+#%%
+import main
+import numpy as np
+import matplotlib.pyplot as plt
+from numpy import sqrt, array, float64, vstack, ma
+from skimage import img_as_float, io
 
-#plt.imshow(image, cmap = 'gray')
-#plt.imshow(image, interpolation = 'none')
+def uneven_through(image,b,c):
+    through = []
+    intervals = array([0,b,c,1])
+    for i in range(0,len(intervals)-1):
+        mask = ma.masked_outside(image, intervals[i], intervals[1+i])
+        through.append(mask)
+    return through 
+
+def euclidean_distance(row1, row2, col1, col2):
+    dist = (((row1 - row2)**2)+((col1 - col2)**2))
+    dist = sqrt(dist)
+    return dist
+
+def one_p_to_set(row, col, sets):
+    p_row = row
+    p_col = col
+    shortest_distance = []
+    distances = []
+    sets = map(tuple, sets)
+    sets = tuple(sets)
+    for rs in range([len(a) for a in sets][0]):
+        for cs in range([len(a) for a in sets][1]):
+            if isinstance(sets[rs][cs], np.float64) == True:
+                s_row = rs
+                s_col = cs
+                dist = euclidean_distance(p_row, s_row, p_col, s_col)
+                dist = array([dist])
+                distances.append(dist)
+    distances.sort()
+    shortest_distance.append(distances[0])
+    return shortest_distance
+
+def line_points_to_sets(points, sets):
+    dis = []
+    points = map(tuple, points)
+    points = tuple(points)
+    for r in range(1):
+        for c in range([len(a) for a in points][1]):
+            if isinstance(points[r][c] , float64) == True:
+                dis.append(one_p_to_set(r,c,sets))
+    return dis
+
+#%%
+
+p3ht = main.molecule(iz = 'P3HT 58k 11 5um 0V_190208_Z Height_Forward_001.tiff', ia = 'P3HT 58k 11 5um 0V_190208_EFM Amplitude_Forward_001.tiff', vz = 'P3HT 58k 11 5um EFM 2V_190208_Z Height_Forward_003.tiff', va = 'P3HT 58k 11 5um EFM 2V_190208_EFM Amplitude_Forward_003.tiff')
+#p3ht = main.molecule(iz = 'P3HT 59k 11 Vdep 0V_210617_Z Height_Forward_016.tiff', ia = 'P3HT 59k 11 Vdep 0V_210617_EFM Amplitude_Forward_016.tiff', vz = 'P3HT 59k 11 Vdep 4V_210617_Z Height_Forward_021.tiff', va = 'P3HT 59k 11 Vdep 4V_210617_EFM Amplitude_Forward_021.tiff')
+
+#p3ht.read()
+#p3ht.bearray()
+iz = p3ht.iz()
+ia = p3ht.ia()
+vz = p3ht.vz()
+va = p3ht.va()
+
+#%%
+
+im_va = img_as_float(io.imread(fname = ia, as_gray = True))
+image = img_as_float(io.imread(fname = vz, as_gray = True))
+a = uneven_through(image, 0.363,0.78)
+sets0 = a[0]
+sets1 = a[1]
+sets2 = a[2]
+points = im_va
+
+d0 = vstack(line_points_to_sets(points, sets0))
+d1 = vstack(line_points_to_sets(points, sets1))
+d2 = vstack(line_points_to_sets(points, sets2))
+#%%
+
+im_va = img_as_float(io.imread(fname = ia, as_gray = True))
+image = img_as_float(io.imread(fname = vz, as_gray = True))
+a = uneven_through(image, 0.363,0.78)
+sets0 = a[0]
+sets1 = a[1]
+sets2 = a[2]
+points = im_va
+
+a0 = vstack(line_points_to_sets(points, sets0))
+a1 = vstack(line_points_to_sets(points, sets1))
+a2 = vstack(line_points_to_sets(points, sets2))
+
+#%% No voltage
+charges = np.reshape(im_va[0], (256,1))
+
+c0 = np.hstack((d0, charges))
+c1 = np.hstack((d1, charges))
+c2 = np.hstack((d2, charges))
+import pandas as pd
+cs0 = c0[c0[:,0].argsort()]
+cs1 = c1[c1[:,0].argsort()]
+cs2 = c2[c2[:,0].argsort()]
+
+west0 = pd.DataFrame(cs0, columns = ['di', 'ch'])
+west1 = pd.DataFrame(cs1, columns = ['di', 'ch'])
+west2 = pd.DataFrame(cs2, columns = ['di', 'ch'])
+
+west0['di'] *= 5/255
+west0['ch'] *= 0.47
+west1['di'] *= 5/255
+west1['ch'] *= 0.47
+west2['di'] *= 5/255
+west2['ch'] *= 0.47
+
+plt.scatter(west0['di'], west0['ch'], c = 'blue')
+plt.scatter(west1['di'], west1['ch'], c = 'yellow')
+plt.scatter(west2['di'], west2['ch'], c = 'red')
+plt.show()
+#%% Voltage
+import pandas as pd
+charges = np.reshape(im_va[0], (256,1))
+
+e0 = np.hstack((d0, charges))
+e1 = np.hstack((d1, charges))
+e2 = np.hstack((d2, charges))
+
+es0 = e0[e0[:,0].argsort()]
+es1 = e1[e1[:,0].argsort()]
+es2 = e2[e2[:,0].argsort()]
+
+east0 = pd.DataFrame(es0, columns = ['di', 'ch'])
+east1 = pd.DataFrame(es1, columns = ['di', 'ch'])
+east2 = pd.DataFrame(es2, columns = ['di', 'ch'])
+
+east0['di'] *= 5/255
+east0['ch'] *= 2.7
+east1['di'] *= 5/255
+east1['ch'] *= 2.7
+east2['di'] *= 5/255
+east2['ch'] *= 2.7
+
+plt.scatter(east0['di'], east0['ch'], c = 'pink')
+plt.scatter(east1['di'], east1['ch'], c = 'purple')
+plt.scatter(east2['di'], east2['ch'], c = 'red')
+plt.show()
 
 
+#%%
+import matplotlib.pyplot as plt
+mycolors = ['lightcoral', 'red','lightskyblue','blue', 'lightgreen','green']      
 
+def plotting(dataset, points):
+    x = np.linspace(0,dataset['di'].max(), points)
+    y = []
+    i=dataset[dataset['di']==0]
+    j=i['ch'].sum()
+    k=i['ch'].count()
+    y.append(j/k)
+    for i in range(0,len(x)-1):
+        h= dataset[dataset['di'].between(x[i], x[i+1], inclusive = 'right')]
+        s = h['ch'].sum()
+        c = h['ch'].count()
+        y.append(s/c)
+    return x,y
+
+
+plt.figure(figsize=(16, 10), dpi= 80, facecolor='w', edgecolor='k')
+x1,y1 = plotting(east0,20)
+x2,y2 = plotting(west0,20)
+plt.scatter(x1,y1, c=mycolors[0], s=150)
+plt.scatter(x2,y2, c=mycolors[1], s=150)
+plt.fill_between(x = x1, y1=y1, y2=0, alpha=0.5, color=mycolors[0], linewidth=2)
+plt.fill_between(x = x2, y1=y2, y2=0, alpha=1, color=mycolors[1], linewidth=2)
+plt.xlabel('Distance from Set (μm)', fontsize = 30)
+plt.ylabel('Charge Density (mV/pixel)', fontsize = 30)
+plt.title("Set 0", fontsize=22)
+plt.xticks(fontsize=20); plt.yticks(fontsize=20)
+plt.legend(labels = ['2V', '0V'], frameon = True, fontsize=30)    
+plt.show()
+
+plt.figure(figsize=(16, 10), dpi= 80, facecolor='w', edgecolor='k')
+x1,y1 = plotting(east1,20)
+x2,y2 = plotting(west1,20)
+plt.scatter(x1,y1, c=mycolors[2], s=150)
+plt.scatter(x2,y2, c=mycolors[3], s=150)
+plt.fill_between(x = x1, y1=y1, y2=0, alpha=0.5, color=mycolors[2], linewidth=2)
+plt.fill_between(x = x2, y1=y2, y2=0, alpha=1, color=mycolors[3], linewidth=2)
+plt.xlabel('Distance from Set (μm)', fontsize = 30)
+plt.ylabel('Charge Density (mV/pixel)', fontsize = 30)
+plt.title("Set 1", fontsize=22)
+plt.xticks(fontsize=20); plt.yticks(fontsize=20)
+plt.legend(labels = ['2V', '0V'],fontsize=30, frameon = True)    
+plt.show()
+
+
+plt.figure(figsize=(16, 10), dpi= 80, facecolor='w', edgecolor='k')
+x1,y1 = plotting(east2,20)
+x2,y2 = plotting(west2,20)
+plt.scatter(x1,y1, c=mycolors[4], s=150)
+plt.scatter(x2,y2, c=mycolors[5], s=150)
+plt.fill_between(x = x1, y1=y1, y2=0, alpha=0.5, color=mycolors[4], linewidth=2)
+plt.fill_between(x = x2, y1=y2, y2=0, alpha=1, color=mycolors[5], linewidth=2)
+plt.xlabel('Distance from Set (μm)', fontsize = 30)
+plt.ylabel('Charge Density (mV/pixel)', fontsize = 30)
+plt.title("Set 2", fontsize=22)
+plt.xticks(fontsize=20); plt.yticks(fontsize=20)
+plt.legend(labels = ['2V', '0V'],fontsize=30, frameon = True)    
+plt.show()   
+
+x1,y1 = plotting(east0,20)
+x2,y2 = plotting(east1,20)
+x3, y3 = plotting(east2, 20)
+x4,y4 = plotting(west0,20)
+x5,y5 = plotting(west1,20)
+x6, y6 = plotting(west2, 20)     
+columns = ['Set 1 - 2V', 'Set 2 - 2V', 'Set 3 - 2V', 'Set 1 - 0V', 'Set 2 - 0V', 'Set 3 - 0V']
+fig, ax = plt.subplots(1, 1, figsize=(16,9), dpi= 80)
+ax.fill_between(x = x1, y1=y1, y2=0, label=columns[0], alpha=0.5, color=mycolors[0], linewidth=2)
+ax.fill_between(x = x2, y1=y2, y2=0, label=columns[1], alpha=0.5, color=mycolors[2], linewidth=2)
+ax.fill_between(x = x3, y1=y3, y2=0, label=columns[2], alpha=0.5, color=mycolors[4], linewidth=2)
+ax.fill_between(x = x4, y1=y4, y2=0, label=columns[3], alpha=0.6, color=mycolors[1], linewidth=2)
+ax.fill_between(x = x5, y1=y5, y2=0, label=columns[4], alpha=0.6, color=mycolors[3], linewidth=2)
+ax.fill_between(x = x6, y1=y6, y2=0, label=columns[5], alpha=0.6, color=mycolors[5], linewidth=2)
+ax.set_title('0V and 2V, All Sets', fontsize=30)
+ax.legend(loc='best', fontsize=20)
+plt.xticks(fontsize=18, horizontalalignment='center')
+plt.yticks(fontsize=18)
+plt.xlim(0, max(x3))
+plt.ylim(0, max(y1))
+plt.xlabel('Distance from Set (μm)', fontsize = 20)
+plt.ylabel('Charge Density (mV/pixel)', fontsize = 20)
+plt.show()
+#%%
+import scipy as sp
+plt.figure(figsize=(16, 10), dpi= 80, facecolor='w', edgecolor='k')
+x1,y1 = plotting(east2,20)
+x2,y2 = plotting(west2,20)
+plt.scatter(x1,y1, c=mycolors[4], s=150)
+plt.scatter(x2,y2, c=mycolors[5], s=150)
+plt.fill_between(x = x1, y1=y1, y2=0, alpha=0.5, color=mycolors[4], linewidth=2)
+plt.fill_between(x = x2, y1=y2, y2=0, alpha=1, color=mycolors[5], linewidth=2)
+plt.xlabel('Distance from Set (μm)', fontsize = 30)
+plt.ylabel('Charge Density (mV/pixel)', fontsize = 30)
+plt.title("Set 2", fontsize=22)
+plt.xticks(fontsize=20); plt.yticks(fontsize=20)
+plt.legend(labels = ['2V', '0V'],fontsize=30, frameon = True)      
+p = np.poly1d(np.polyfit(x1, y1, 8))
+t = np.linspace(0, x1[-1], 20)
+plt.plot(t, p(t), '-', c = mycolors[5])
+plt.scatter(x2,y2)
+plt.show()
+
+#%%
+x1 = np.linspace(0, east2['di'].max(), 20)
+y1=[]
+h = east2[east2['di'] == 0] 
+s = h['ch'].sum()
+c = h['ch'].count()
+y1.append(s/c)
+for i in range(0, len(x1)-1):
+    h = east2[east2['di'].between(x1[i], x1[i+1], inclusive = 'right')]
+    s = h['ch'].sum()
+    c = h['ch'].count()
+    y1.append(s/c)
+
+x = np.linspace(0, west2['di'].max(), 20)
+y=[]
+h = west2[west2['di'] == 0] 
+s = h['ch'].sum()
+c = h['ch'].count()
+y.append(s/c)
+for i in range(0, len(x)-1):
+    h = west2[west2['di'].between(x[i], x[i+1], inclusive = 'right')]
+    s = h['ch'].sum()
+    c = h['ch'].count()
+    y.append(s/c)
+plt.plot(x, y)
+plt.plot(x1, y1)
+plt.show()
+#%%
+x1,y1 = plotting(east0,20)
+x2,y2 = plotting(east1,20)
+x3, y3 = plotting(east2, 20)
+
+mycolors = ['tab:red', 'tab:blue', 'tab:green', 'tab:orange', 'tab:brown', 'tab:grey', 'tab:pink', 'tab:olive']      
+columns = ['Set 1', 'Set 2', 'Set 3']
+
+fig, ax = plt.subplots(1, 1, figsize=(16,9), dpi= 80)
+ax.fill_between(x = x1, y1=y1, y2=0, label=columns[0], alpha=0.5, color=mycolors[0], linewidth=2)
+ax.fill_between(x = x2, y1=y2, y2=0, label=columns[1], alpha=0.5, color=mycolors[1], linewidth=2)
+ax.fill_between(x = x3, y1=y3, y2=0, label=columns[2], alpha=0.5, color=mycolors[2], linewidth=2)
+
+ax.set_title('2V, All Sets', fontsize=30)
+ax.legend(loc='best', fontsize=20)
+plt.xticks(fontsize=18, horizontalalignment='center')
+plt.yticks(fontsize=18)
+plt.xlim(0, max(x3))
+plt.ylim(0, max(y1))
+plt.xlabel('Distance from Set (μm)', fontsize = 20)
+plt.ylabel('Charge Density (mV/pixel)', fontsize = 20)
+
+plt.show()
 
 

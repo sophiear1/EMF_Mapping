@@ -15,6 +15,11 @@ ia = p3ht.ia()
 vz = p3ht.vz()
 va = p3ht.va()
 
+def image_show(image, nrows=1, ncols=1, cmap='gray', **kwargs):
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 16))
+    ax.imshow(image, cmap='gray')
+    ax.axis('off')
+    return fig, ax
 #%%Edge enhancement using Pillow
 #https://pythontic.com/image-processing/pillow/edge-enhancement-filter
 #https://pythontic.com/image-processing/pillow/edge-detection
@@ -24,7 +29,9 @@ import skimage
 import skimage.feature
 import skimage.viewer
 imageObject = Image.open(vz)
-imageObject = imageObject.convert('RGB') # need to convert toe RGB file for enhancement but I think this might make it harder to find edges so defeats the point of the enhancement
+
+imageObject = Image.fromarray(p3ht.bearray(p3ht.vz()))
+#imageObject = imageObject.convert('RGB') # need to convert toe RGB file for enhancement but I think this might make it harder to find edges so defeats the point of the enhancement
 # Apply edge enhancement filter
 edgeEnhanced = imageObject.filter(ImageFilter.EDGE_ENHANCE)
 # Apply increased edge enhancement filter
@@ -171,10 +178,10 @@ plt.show()
 #high alpha seems to split into 3 different regions
 filename = vz
 image = img_as_float(skimage.io.imread(fname=filename, as_gray=True))
-seed_point = (100, 220)
+seed_point = (125, 125)
 flood_mask = seg.flood(image, seed_point, tolerance = 0.3)
 fig,ax = image_show(image, cmap = 'gray')
-ax.imshow(flood_mask,alpha = 0.5, cmap = 'gray')
+ax.imshow(flood_mask,alpha = 1, cmap = 'gray')
 
 #%%Chan-Vese, seems quite good
 filename = vz
@@ -182,7 +189,7 @@ image = skimage.io.imread(fname=filename, as_gray=True)
 image_show(image)
 chan_vese = seg.chan_vese(image)
 fig, ax = image_show(image)
-ax.imshow(chan_vese == 0, alpha=-0.3, cmap='gray');
+ax.imshow(chan_vese == 0, alpha=1, cmap='gray');
 filename = va
 image2 = skimage.io.imread(fname=filename, as_gray=True)
 image_show(image2)
@@ -260,7 +267,7 @@ plt.show(hist)
 #Apeer_Micro Course Follow Through 
 import cv2 
 import skimage
-from skimage import io, img_as_float, img_as_ubyte, color, filters, feature, measure, exposure, util, 
+from skimage import io, img_as_float, img_as_ubyte, color, filters, feature, measure, exposure, util 
 from skimage.transform import rescale,resize, downscale_local_mean
 from skimage.filters import gaussian, sobel, unsharp_mask, median, roberts, scharr, prewitt, threshold_multiotsu, threshold_otsu
 from skimage.morphology import disk
@@ -510,11 +517,11 @@ plt.show()
 #%% Fourier Transform
 #Outer regions represent high frequency components
 #Use a low pass filter
-image = cv2.imread(vz, 0)
+image = io.imread(vz, as_gray = True)
 
 dft = cv2.dft(np.float32(image), flags=cv2.DFT_COMPLEX_OUTPUT)
 dft_shift = np.fft.fftshift(dft)
-magnitude_spectrum = 20 * np.log((cv2.magnitude(dft_shift[:, :, 0], dft_shift[:, :, 1]))+1)
+magnitude_spectrum = 255 * np.log((cv2.magnitude(dft_shift[:, :, 0], dft_shift[:, :, 1]))+1)
 fig = plt.figure(figsize=(12, 12))
 ax1 = fig.add_subplot(2,2,1)
 ax1.imshow(image, cmap = 'gray')
@@ -527,7 +534,7 @@ plt.show()
 rows, cols = image.shape
 crow, ccol = int(rows / 2), int(cols / 2)
 mask = np.ones((rows, cols, 2), np.uint8)
-r = 3
+r = 2
 center = [crow, ccol]
 x, y = np.ogrid[:rows, :cols]
 mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
@@ -536,7 +543,7 @@ mask[mask_area] = 0
 rows, cols = image.shape
 crow, ccol = int(rows / 2), int(cols / 2)
 mask = np.zeros((rows, cols, 2), np.uint8)
-r = 100
+r = 10
 center = [crow, ccol]
 x, y = np.ogrid[:rows, :cols]
 mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
@@ -545,8 +552,8 @@ mask[mask_area] = 1
 rows, cols = image.shape
 crow, ccol = int(rows / 2), int(cols / 2)
 mask = np.zeros((rows, cols, 2), np.uint8)
-r_out = 80
-r_in = 10
+r_out = 100
+r_in = 1
 center = [crow, ccol]
 x, y = np.ogrid[:rows, :cols]
 mask_area = np.logical_and(((x - center[0]) ** 2 + (y - center[1]) ** 2 >= r_in ** 2),
@@ -652,27 +659,70 @@ print(df.head())
 #max intensity, mean intensity, moments, orientation, perimeter, solidity, and many more
 
 #%%
-image = img_as_float(skimage.io.imread(fname = va, as_gray = False))
+image = img_as_float(skimage.io.imread(fname = vz, as_gray = False))
 
 through = []
 def run_through(image, no_of_sections):
-    intervals = np.linspace(0, 1, no_of_sections)
-    for i in range(0,no_of_sections-1):
+    intervals = np.linspace(0, 1, no_of_sections+1)
+    for i in range(0,no_of_sections):
         mask = np.ma.masked_outside(image, intervals[i], intervals[1+i])
         through.append(mask)
 build = []   
 def build_up(image, no_of_sections):
-    intervals = np.linspace(0, 1, no_of_sections)
+    intervals = np.linspace(0, 1, no_of_sections) #Starts with empty image and adds lowest first
+    intervals = np.flip(intervals) # starts full and removes highest first
     for i in range(0,no_of_sections):
         mask = np.ma.masked_greater(image, intervals[i])
         build.append(mask)
 dig = []
 def dig_up(image, no_of_sections):
-    interval = np.linspace(0, 1, no_of_sections)
-    intervals = np.flip(interval)
+    intervals = np.linspace(0, 1, no_of_sections) # starts full and removes lowest first
+    intervals = np.flip(intervals) # starts empty and adds highest first
     for i in range(0,no_of_sections):
         mask = np.ma.masked_less_equal(image, intervals[i])
         dig.append(mask)
+        
+#%%
+run_through(image, 10)
+print(len(through))
+#%%
+def sections(image, no_of_sections, split):
+    array = []
+    split_str = ['segment', 'Empty_Low', 'Empty_High', 'Full_Low','Full_High']
+    index = split_str.index(split)
+    intervals = np.linspace(0, 1, no_of_sections+1)
+    def segment(image, no_of_sections):
+        for i in range(0,no_of_sections):
+            mask = np.ma.masked_outside(image, intervals[i], intervals[1+i])
+            array.append(mask)
+    def empty_low(image, no_of_sections):
+        for i in range(0,no_of_sections):
+            mask = np.ma.masked_greater(image, intervals[i])
+            array.append(mask)
+    def full_low(image, no_of_sections):
+        for i in range(0,no_of_sections):
+            mask = np.ma.masked_less_equal(image, intervals[i])
+            array.append(mask)
+    if index == 2 or index == 4:
+        intervals = np.flip(intervals)
+    def empty_high(image, no_of_sections):
+        for i in range(0,no_of_sections):
+            mask = np.ma.masked_less_equal(image, intervals[i])
+            array.append(mask)
+    def full_high(image, no_of_sections):
+        for i in range(0,no_of_sections):
+            mask = np.ma.masked_greater(image, intervals[i])
+            array.append(mask)
+    split = [segment, empty_low, empty_high, full_low, full_high]
+    split[index](image, no_of_sections)
+    for i in range(0, len(array)):
+        fig, ax = plt.subplots()
+        ax.imshow(image, cmap = 'gray')
+        ax.imshow(array[i], cmap = 'magma', interpolation = 'none')
+    return array
+
+test = sections(image, 3, 'segment')    
+test2 = sections(image, 10, 'Empty_High')
 #%%
 run_through(image, 10)
 build_up(image, 9)
@@ -712,9 +762,10 @@ plt.imshow(build_vz[1], cmap = 'magma', interpolation = 'none')
 efm = dig[1]
 z_height = build_vz[1]
 for c in contours:
-    plt.plot(c[:,1],c[:,0], color = 'blue')
+    plt.plot(c[:,1],c[:,0], color = 'black')
 print(contours)
 print(len(contours))
+
 #%%
 
 for i in range(0, len( contours)):
@@ -739,7 +790,7 @@ for c in contours:
     path = matplotlib.path.Path(polygon)
     mask = path.contains_points(points)
     mask.shape = xv.shape
-    plt.plot(c[:,1],c[:,0], color = 'blue')
+    #plt.plot(c[:,1],c[:,0], color = 'blue')
 #%%
 from skimage import data, img_as_float
 from skimage.metrics import structural_similarity as ssim
@@ -757,9 +808,9 @@ mse_va = mean_squared_error(img_vz, img_va)
 ssim_va = ssim(img_vz, img_va, data_range = img_va.max() - img_va.min())
 
 label = 'MSE: {:.2f}, SSIM: {:.2f}'
-ax[0].imshow(img_vz, cmap = 'gray')
+ax[0].imshow(img_vz, cmap = 'magma')
 ax[0].set_xlabel(label.format(mse_vz, ssim_vz))
-ax[1].imshow(img_va, cmap = 'gray')
+ax[1].imshow(img_va, cmap = 'magma')
 ax[1].set_xlabel(label.format(mse_va, ssim_va))
 plt.tight_layout()
 plt.show()

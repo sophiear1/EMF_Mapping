@@ -16,19 +16,49 @@ p3ht = main.molecule(
     )
 
 #%%
-a,b,c,d = p3ht.find_contours()
-p3ht.read_as_skimage()
-main.plt.imshow(p3ht.iz())
-for con in a:
-    main.plt.plot(con[:,1],con[:,0])
+a,b,c,d = p3ht.central_moments(p=2)
+print(a, b, c, d)
+
 
 #%%
-p3ht.high_pass_filter(r = 3)
+a,b,c,d = p3ht.average_rms_roughness(params = [[0.33, 0.66], [0.33, 0.66], [0.33, 0.66], [0.33, 0.66]])
+
+
+#%%
+#p3ht.read_as_skimage()
+#iz = p3ht.iz()
+#p3ht.convert_to()
+#p3ht.sections(no_of_sections = 3, split = 'Full_Low')
+#b = isinstance(iz[0][0], np.uint8)
+#print(b)
+
+a,b,c,d = p3ht.uneven_sections(dividers = [[0.2, 0.4, 0.6, 0.8]])
+
+e = p3ht.central_moments(p=2, specific = a[0])
+
+#%%
+p3ht.line_graph('h', 155)
+
+
+#%%
+a,b,c,d = p3ht.frequency_domain()
+print(a)
+
+#%%
+p3ht.frequency_domain()
+p3ht.high_pass_filter()
+#p3ht.image_frequency_domain()
+#p3ht.image_show(four=True, cmap = 'magma')
+#main.plt.show()
 p3ht.spatial_domain()
-p3ht.image_show(p3ht.iz(), cmap = 'magma')
-p3ht.image_show(p3ht.ia(), cmap = 'magma')
-p3ht.image_show(p3ht.vz(), cmap = 'magma')
-p3ht.image_show(p3ht.va(), cmap = 'magma')
+p3ht.image_show(four=True, cmap = 'winter')
+main.plt.show()
+#%%
+a,b,c,d = p3ht.find_contours()
+p3ht.read_as_skimage()
+#main.plt.imshow(p3ht.iz(), cmap = 'magma')
+for con in a:
+    main.plt.plot(con[:,1],con[:,0])
 
 #%% Read as gdal and be array for all 4 files (should work with either hashed out)
 gdal = p3ht.read_as_gdal()
