@@ -52,7 +52,7 @@ image_show(image) # another way to view
 #import image
 import skimage
 from skimage import io
-image_n = io.imread(va, as_gray = True) 
+image_n = io.imread(vz, as_gray = True) 
 #show image
 plt.imshow(image_n)
 
@@ -125,9 +125,14 @@ ax2.imshow(shuffle_labels(labels_masked), cmap = 'magma')
 from skimage import measure
 contours = measure.find_contours(labels_masked,level = t)
 #image = 255-image
+for c in contours:
+    c = (c*10)-0.75
+
 plt.imshow(image)
 for c in contours:
     plt.plot(c[:,1],c[:,0])
+    
+    
 
 #%%
 image = io.imread(vz, as_gray = True) 
@@ -142,7 +147,7 @@ for i in image2:
 #%%
 for c in contours:
     plt.plot(c[:,1],c[:,0],color = 'red')
-
+#%%
 for c in contours2:
     plt.plot(c[:,1],c[:,0], color = 'blue')
 #%%
@@ -280,20 +285,26 @@ for i in range(0,len(Z3_masked)):
             Z3_masked[i][p] = 0.78
             
 x_mg, y_mg = np.meshgrid(np.linspace(0,-1, 256), np.linspace(0,1,256))
-fig = plt.figure(figsize = (50,20))
-ax = fig.add_subplot(1,3,1, projection = '3d')
+fig = plt.figure(figsize = (20,20))
+ax = fig.add_subplot(1,1,1, projection = '3d')
 surf = ax.plot_surface(x_mg, y_mg, Z1_masked, vmin = 0, vmax = 0.5,cmap = 'magma', linewidth = 0,antialiased = False)
 cset = ax.contour(x_mg, y_mg, Z1_masked, zdir='z', offset=-1, cmap='winter')
 ax.set_zlim(-1, 1)
 ax.view_init(30, 45)
+fig.colorbar(surf)
+plt.show()
 
-ax = fig.add_subplot(1,3,2, projection = '3d')
+fig = plt.figure(figsize = (20,20))
+ax = fig.add_subplot(1,1,1, projection = '3d')
 surf = ax.plot_surface(x_mg, y_mg, Z2_masked, vmin = 0, vmax = 1, cmap = 'magma', linewidth = 0,antialiased = False)
 cset = ax.contour(x_mg, y_mg, Z2_masked, zdir='z', offset=-1, cmap='winter')
 ax.set_zlim(-1, 1)
 ax.view_init(30, 45)
+fig.colorbar(surf)
+plt.show()
 
-ax = fig.add_subplot(1,3,3, projection = '3d')
+fig = plt.figure(figsize = (20,20))
+ax = fig.add_subplot(1,1,1, projection = '3d')
 surf = ax.plot_surface(x_mg, y_mg, Z3_masked, vmin = 0.5, vmax = 1, cmap = 'magma', linewidth = 0,antialiased = False)
 #surf = ax.contour3D(x, y, Z3_masked, 150, cmap='magma')
 cset = ax.contour(x_mg, y_mg, Z3_masked, zdir='z', offset=-1, cmap='winter')
@@ -303,12 +314,25 @@ ax.set_zlim(-1, 1)
 
 ax.view_init(30, 45)
 fig.colorbar(surf)
-plt.show()
+#%%
+import plotly.graph_objects as go
+
+x, y = np.linspace(0,-1, 256), np.linspace(0,1,256)
+x_mg, y_mg = np.meshgrid(np.linspace(0,-1, 256), np.linspace(0,1,256))
+fig = go.Figure(data=[go.Surface(x=x_mg, y=y_mg,z=Z3_masked, colorscale='magma'), go.Surface(x=x, y=y, z=im_va, colorscale = 'picnic')])
+#fig.update_traces(contours_z=dict(show=True, usecolormap=True,
+                                  #highlightcolor="limegreen", project_z=True))
+fig.update_layout(title='Z Height', autosize=False,
+                  width=1000, height=1000,
+                  margin=dict(l=65, r=50, b=65, t=90))
+fig.show()
+fig.write_html("testfile.html")
+
 #%%
 import matplotlib as mpl
 image = img_as_float(io.imread(vz, as_gray = True)) 
 im_va = img_as_float(io.imread(va, as_gray = True))
-a = uneven_through(im_va, 0.1, 0.99)
+a = uneven_through(im_va, 0.1, 0.90)
 E3_masked = a[2]
 #cmap, norm = mpl.colors.from_levels_and_colors([0], ['white'])
 x_mg, y_mg = np.meshgrid(np.linspace(0,-1, 256), np.linspace(0,1,256))
@@ -322,31 +346,47 @@ E3_masked = E3_masked*1
 fig = plt.figure(figsize = (20,20))
 ax = fig.add_subplot(1,1,1, projection = '3d')
 image = image
-#cset = ax.plot_surface(x_mg, y_mg, image, cmap='plasma')
+
 #surf = ax.plot_surface(x_mg, y_mg, E3_masked, vmin = 0.78, cmap = 'twilight', linewidth = 0,antialiased = False)
 #zheight = ax.plot(image, cmap = 'magma')
 #cset = ax.contour(x_mg, y_mg, image, zdir='z', offset=0, cmap='plasma')
-surf = ax.contour3D(x, y, E3_masked, 150, vmin = 0, vmax = 10, cmap ='winter', alpha = 0.2)
+surf = ax.contour3D(x, y, E3_masked, 150, vmin = 0, vmax = 10, cmap ='winter')
+#cset = ax.plot_surface(x_mg, y_mg, image, cmap='plasma')
 cset = ax.contour3D(x, y, image, 150,cmap='plasma')
 
-ax.set_zlim3d(0, 3)
+ax.set_zlim3d(0, 5)
 #ax.view_init(45, 60)
 #%%
-for angle in range(0, 360):
-    ax.view_init(30, angle)
-    plt.draw()
-    plt.pause(.001)
+im_va = img_as_float(io.imread(va, as_gray = True))
+image = img_as_float(io.imread(vz, as_gray = True))
+a = uneven_through(im_va, 0.1, 0.50)
+E1_masked = a[0]
+for i in range(0,len(E1_masked)):
+    for p in range(0,256):
+        if isinstance(E1_masked[i][p], np.ma.core.MaskedConstant):
+            E1_masked[i][p] = np.nan
+E1_masked = E1_masked + 0.78
 
-#%%
-fig = plt.figure()
-ax1 = fig.add_subplot(111, projection = '3d')
-x, y = np.linspace(0,-1, 256), np.linspace(0,1,256)
-#xx, yy = np.meshgrid(x, y)
-#x, y = xx.ravel(), yy.ravel()
-width = depth = (1/256)
-bottom = np.zeros_like(E3_masked)
-ax1.bar3d(x,y,bottom, width, depth, E3_masked, shade = False)
+x1, y1 = np.meshgrid(np.linspace(0,-1,256), np.linspace(0,1,256))
+z1 = im_va
+x,y,z = x1.flatten(), y1.flatten(), z1.flatten()
 
+fig = go.Figure(data=[
+    go.Scatter3d(
+    x=x,
+    y=y,
+    z=z,
+    mode='markers',
+    marker=dict(
+        size=5,
+        color=z,                # set color to an array/list of desired values
+        colorscale='picnic',# choose a colorscale
+        opacity=1
+    )),
+    go.Surface(x=x_mg, y=y_mg,z=image, colorscale='magma', opacity=0.7)
+])
+fig.show()
+fig.write_html("testfile.html")
 
 #%%
 import plotly.graph_objects as go
