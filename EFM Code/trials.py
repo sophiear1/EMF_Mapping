@@ -255,7 +255,11 @@ def average_rms_roughness(params, im):
     average_mu = np.power(total_mu/len(through), 0.5)
     return average_mu
 #%%
-
+image = img_as_float(skimage.io.imread(fname = vz))
+d= uneven_through(image = image, b = 0.3, c = 0.7)
+for i in range(len(d)):
+    print(central_moments(d[i], p=2))
+#%%
 a = average_rms_roughness([0.287,0.848], image)
 print(a)
 

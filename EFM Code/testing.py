@@ -16,13 +16,19 @@ p3ht = main.molecule(
     )
 
 #%%
-a,b,c,d = p3ht.central_moments(p=2)
-print(a, b, c, d)
-
-
+arr = p3ht.central_moments(2)
+print(arr)
 #%%
-a,b,c,d = p3ht.average_rms_roughness(params = [[0.33, 0.66], [0.33, 0.66], [0.33, 0.66], [0.33, 0.66]])
-
+import numpy
+a = numpy.ma.core.MaskedArray()
+if isinstance(a, list):
+    a.append(['is_list'])
+if isinstance(a, numpy.ndarray):
+    numpy.append(a, ['is_array'])
+print(a)
+#%%
+p3ht.uneven_sections(dividers = [[0.363, 0.78]])
+p3ht.image_masked_arrays(cmap = 'magma')
 
 #%%
 #p3ht.read_as_skimage()

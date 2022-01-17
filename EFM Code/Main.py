@@ -1488,16 +1488,16 @@ class molecule:
         if specific is None:
             for i in range(0, len(self.__iz)):
                 fig, ax = plt.subplots()
-                ax.imshow(self.__iz[i], cmap = cmap)
+                ax.imshow(self.__iz[i], cmap = cmap, interpolation = None)
             for i in range(0, len(self.__ia)):
                 fig, ax = plt.subplots()
-                ax.imshow(self.__ia[i], cmap = cmap)
+                ax.imshow(self.__ia[i], cmap = cmap, interpolation = None)
             for i in range(0, len(self.__vz)):
                 fig, ax = plt.subplots()
-                ax.imshow(self.__vz[i], cmap = cmap)
+                ax.imshow(self.__vz[i], cmap = cmap, interpolation = None)
             for i in range(0, len(self.__va)):
                 fig, ax = plt.subplots()
-                ax.imshow(self.__va[i], cmap = cmap)
+                ax.imshow(self.__va[i], cmap = cmap, interpolation = None)
         else:
             for i in range(0, len(specific)):
                 fig, ax = plt.subplots()
@@ -1604,12 +1604,20 @@ class molecule:
                 self.read_as_skimage()
             if isinstance(self.__iz[0][0], np.uint8):
                 self.convert_to()
-            if isinstance(self.__iz, np.ma.core.MaskedArray) is True:
-                roughness_iz = central_moments_masked(masked_im = self.__iz, p=p)
-                roughness_ia = central_moments_masked(masked_im = self.__ia, p=p)
-                roughness_vz = central_moments_masked(masked_im = self.__vz, p=p)
-                roughness_va = central_moments_masked(masked_im = self.__va, p=p)
-            if isinstance(self.__iz, np.ndarray):
+            if isinstance(self.__iz[0], np.ma.core.MaskedArray):
+                roughness_iz = []
+                roughness_ia = []
+                roughness_vz = []
+                roughness_va = []
+                for i in range(len(self.__iz)):
+                    roughness_iz.append(central_moments_masked(masked_im = self.__iz[i], p=p))
+                for i in range(len(self.__ia)):
+                    roughness_ia.append(central_moments_masked(masked_im = self.__ia[i], p=p))
+                for i in range(len(self.__vz)):
+                    roughness_vz.append(central_moments_masked(masked_im = self.__vz[i], p=p))
+                for i in range(len(self.__va)):
+                    roughness_va.append(central_moments_masked(masked_im = self.__va[i], p=p))
+            if not isinstance(self.__iz[0], np.ndarray):
                 roughness_iz = central_moments_unmasked(unmasked_im = self.__iz, p=p)
                 roughness_ia = central_moments_unmasked(unmasked_im = self.__ia, p=p)
                 roughness_vz = central_moments_unmasked(unmasked_im = self.__vz, p=p)
@@ -1628,50 +1636,40 @@ class molecule:
                 roughness = [roughness]
         return roughness
         
-    def average_rms_roughness(self, params, optimize = False, 
-                              bnds = ((0.01, 1), (0.01, 1)), x0 = [0.33, 0.66], 
-                              args = [image], specific = None):
-        def average(im, params):
-            through = self.uneven_sections(specific = im, dividers = params)
+    def average_rms_roughness(self,params, split = True, specific = None):
+        def a_rms_r_split(params, im):
+            b,c = params
+            through = im.uneven_through(im, b,c)
             total_mu = 0
-            for i in range(0, len(through)):
-                mu = self.central_moments(p=2, specific =through[i])
-                total_mu = total_mu + np.power(mu, 2)
+            for i in range(0, len(through),1):
+                mu = im.central_moments(through[i], 2)
+                total_mu = total_mu + np.power(mu,2)
             average_mu = np.power(total_mu/len(through), 0.5)
             return average_mu
-        if optimize is False:
-            if specific is None:
-                if isinstance(self.__iz, str):
-                    self.read_as_skimage()
-                if isinstance(self.__iz[0][0], np.uint8):
-                    self.convert_to()
-                roughness_iz = average(im = self.__iz, params=params[0])
-                roughness_ia = average(im = self.__ia, params=params[1])
-                roughness_vz = average(im = self.__vz, params=params[2])
-                roughness_va = average(im = self.__va, params=params[3])
-                roughness = [ roughness_iz, roughness_ia, roughness_vz, roughness_va]
-            else:
-                if isinstance(specific, str):
-                    self.read_as_skimage(specific = specific)
-                if isinstance(specific[0][0], np.uint8):
-                    self.convert_to(specific = specific)
-                roughness = average(im = specific, params = params)
-                roughness = [roughness]
-        return roughness
-            
-                    
-                
-                
-            
-            
-#image = img_as_float(skimage.io.imread(fname = iz, as_gray = True))
-#bnds = ((0.01,1),(0.01,1))
-#x0 = [0.33, 0.66]
-#mi = sp.optimize.dual_annealing(average_rms_roughness, bounds=bnds, args=[image], maxfun =500, x0=x0)
-#print(mi)
+        def a_rms_already_split(im):
+            total_mu = 0
+            for i in range(0, len(im), 1):
+                mu = im.central_moments(im[i], 2)
+                total_mu = total_mu + np.power(mu, 2)
+            average_mu = np.power(total_mu/len(im), 0.5)
+            return average_mu
+        if specific is None:
+            if isinstance(self.__iz, str):
+                self.read_as_skimage()
+            if isinstance(self.__iz[0][0], np.uint8):
+                self.convert_to()
+            self.__iz = a_rms_r_split(params = params, im = self.__iz)
+            self.__ia = a_rms_r_split(params = params, im = self.__ia)
+            self.__vz = a_rms_r_split(params= params, im =  self.__vz)
+            self.__va = a_rms_r_split(params = params, im = self.__va)
+            return self.__iz, self.__ia, self.__vz, self.__va
+        else:
+            if isinstance(specific, str):
+               self.read_as_skimage(specific = specific )
+            if isinstance(specific[0][0], np.uint8):
+                self.convert_to(specific = specific)
+            return specific()
 
-        
-    
         
     
         

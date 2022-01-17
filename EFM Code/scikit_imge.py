@@ -86,7 +86,6 @@ t = filters.threshold_li(image_g)
 #%%
 thresholded = (image_g <= t)
 plt.imshow(thresholded)
-
 #%%distance from maximum points to minimum points
 from skimage import segmentation, morphology, color
 distance = ndi.distance_transform_edt(thresholded)
@@ -123,16 +122,29 @@ ax2.imshow(shuffle_labels(labels_masked), cmap = 'magma')
 
 #%%plot contors over the top so can see circles around region
 from skimage import measure
-contours = measure.find_contours(labels_masked,level = t)
-#image = 255-image
-for c in contours:
-    c = (c*10)-0.75
+#contours = measure.find_contours(labels_masked,level = t)
+labels_expanded = skimage.segmentation.expand_labels(labels_masked, distance = 11)
+contours = measure.find_contours(labels_expanded ,level = t)
 
-plt.imshow(image)
+#%%
+image = img_as_float(skimage.io.imread(fname = vz, as_gray = True))
+image = uneven_through(image, 0.363, 0.78)
+
+
+plt.imshow(image[2], cmap = 'magma', interpolation= None)
+
+for c in contours:
+    plt.plot(c[:,1],c[:,0], c = 'blue')
+    
+plt.title('Plot of Mlocation of maximum EFM amplitude')
+    
+plt.show()
+
+
+#%%
+plt.imshow(im_va)
 for c in contours:
     plt.plot(c[:,1],c[:,0])
-    
-    
 
 #%%
 image = io.imread(vz, as_gray = True) 
@@ -147,7 +159,7 @@ for i in image2:
 #%%
 for c in contours:
     plt.plot(c[:,1],c[:,0],color = 'red')
-#%%
+
 for c in contours2:
     plt.plot(c[:,1],c[:,0], color = 'blue')
 #%%
@@ -266,7 +278,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from skimage import img_as_float, io
 import numpy as np
 image = img_as_float(io.imread(vz, as_gray = True)) 
-a = uneven_through(image, 0.363,0.78)
+a = uneven_through(image, 0.28,0.84)
+
 
 Z1_masked = a[0]
 for i in range(0,len(Z1_masked)):
@@ -277,40 +290,58 @@ Z2_masked = a[1]
 for i in range(0,len(Z2_masked)):
     for p in range(0,256):
         if isinstance(Z2_masked[i][p], np.ma.core.MaskedConstant):
-            Z2_masked[i][p] = 0.363
+            Z2_masked[i][p] = 0.28
 Z3_masked = a[2]
 for i in range(0,len(Z3_masked)):
     for p in range(0,256):
         if isinstance(Z3_masked[i][p], np.ma.core.MaskedConstant):
-            Z3_masked[i][p] = 0.78
+            Z3_masked[i][p] = 0.84
             
-x_mg, y_mg = np.meshgrid(np.linspace(0,-1, 256), np.linspace(0,1,256))
+x_mg, y_mg = np.meshgrid(np.linspace(0,-5, 256), np.linspace(0,5,256))
 fig = plt.figure(figsize = (20,20))
 ax = fig.add_subplot(1,1,1, projection = '3d')
-surf = ax.plot_surface(x_mg, y_mg, Z1_masked, vmin = 0, vmax = 0.5,cmap = 'magma', linewidth = 0,antialiased = False)
-cset = ax.contour(x_mg, y_mg, Z1_masked, zdir='z', offset=-1, cmap='winter')
-ax.set_zlim(-1, 1)
+surf = ax.plot_surface(x_mg, y_mg, Z1_masked*125, vmin = 0, vmax = 125,cmap = 'magma', linewidth = 0,antialiased = False)
+ax.set_xlabel('Distance (µm)', fontsize = 18)
+ax.set_ylabel('Distance (µm)', fontsize = 18)
+ax.set_zlabel('Distance (µm)', fontsize = 18)
+ax.tick_params(axis='x', labelsize=12)
+ax.tick_params(axis='y', labelsize=12)
+ax.tick_params(axis='z', labelsize=12)
+cset = ax.contour(x_mg, y_mg, Z1_masked, zdir='z', offset=-100, cmap='autumn')
+ax.set_zlim(-100, 150)
 ax.view_init(30, 45)
 fig.colorbar(surf)
 plt.show()
 
 fig = plt.figure(figsize = (20,20))
 ax = fig.add_subplot(1,1,1, projection = '3d')
-surf = ax.plot_surface(x_mg, y_mg, Z2_masked, vmin = 0, vmax = 1, cmap = 'magma', linewidth = 0,antialiased = False)
-cset = ax.contour(x_mg, y_mg, Z2_masked, zdir='z', offset=-1, cmap='winter')
-ax.set_zlim(-1, 1)
+surf = ax.plot_surface(x_mg, y_mg, Z2_masked*125, vmin = 0, vmax = 125, cmap = 'magma', linewidth = 0,antialiased = False)
+ax.set_xlabel('Distance (µm)', fontsize = 18)
+ax.set_ylabel('Distance (µm)', fontsize = 18)
+ax.set_zlabel('Distance (µm)', fontsize = 18)
+ax.tick_params(axis='x', labelsize=12)
+ax.tick_params(axis='y', labelsize=12)
+ax.tick_params(axis='z', labelsize=12)
+cset = ax.contour(x_mg, y_mg, Z2_masked, zdir='z', offset=-100, cmap='autumn')
+ax.set_zlim(-100, 150)
 ax.view_init(30, 45)
 fig.colorbar(surf)
 plt.show()
 
 fig = plt.figure(figsize = (20,20))
 ax = fig.add_subplot(1,1,1, projection = '3d')
-surf = ax.plot_surface(x_mg, y_mg, Z3_masked, vmin = 0.5, vmax = 1, cmap = 'magma', linewidth = 0,antialiased = False)
+surf = ax.plot_surface(x_mg, y_mg, Z3_masked*125, vmin = 0, vmax = 125, cmap = 'magma', linewidth = 0,antialiased = False)
+ax.set_xlabel('Distance (µm)', fontsize = 18)
+ax.set_ylabel('Distance (µm)', fontsize = 18)
+ax.set_zlabel('Distance (µm)', fontsize = 18)
+ax.tick_params(axis='x', labelsize=12)
+ax.tick_params(axis='y', labelsize=12)
+ax.tick_params(axis='z', labelsize=12)
 #surf = ax.contour3D(x, y, Z3_masked, 150, cmap='magma')
-cset = ax.contour(x_mg, y_mg, Z3_masked, zdir='z', offset=-1, cmap='winter')
+cset = ax.contour(x_mg, y_mg, Z3_masked, zdir='z', offset=-100, cmap='autumn')
 #cset = ax.contour(x_mg, y_mg, Z3_masked, zdir='x', offset=0, cmap='winter')
 #cset = ax.contour(x_mg, y_mg, Z3_masked, zdir='y', offset=0, cmap='winter')
-ax.set_zlim(-1, 1)
+ax.set_zlim(-100, 150)
 
 ax.view_init(30, 45)
 fig.colorbar(surf)
@@ -359,17 +390,17 @@ ax.set_zlim3d(0, 5)
 #%%
 im_va = img_as_float(io.imread(va, as_gray = True))
 image = img_as_float(io.imread(vz, as_gray = True))
-a = uneven_through(im_va, 0.1, 0.50)
-E1_masked = a[0]
+a = uneven_through(im_va, 0.1, 0.99)
+E1_masked = a[2]
 for i in range(0,len(E1_masked)):
     for p in range(0,256):
         if isinstance(E1_masked[i][p], np.ma.core.MaskedConstant):
             E1_masked[i][p] = np.nan
-E1_masked = E1_masked + 0.78
-
+E1_masked = E1_masked 
 x1, y1 = np.meshgrid(np.linspace(0,-1,256), np.linspace(0,1,256))
-z1 = im_va
+z1 = E1_masked
 x,y,z = x1.flatten(), y1.flatten(), z1.flatten()
+
 
 fig = go.Figure(data=[
     go.Scatter3d(
@@ -383,8 +414,11 @@ fig = go.Figure(data=[
         colorscale='picnic',# choose a colorscale
         opacity=1
     )),
-    go.Surface(x=x_mg, y=y_mg,z=image, colorscale='magma', opacity=0.7)
+    go.Surface(x=x_mg, y=y_mg,z=image, colorscale='magma', opacity=0.7), 
+    go.surface(x = c[1], y = c[0], z=1, colorscale = 'magma')
 ])
+
+
 fig.show()
 fig.write_html("testfile.html")
 
@@ -726,6 +760,31 @@ plt.ylim(0, max(y1))
 plt.xlabel('Distance from Set (μm)', fontsize = 20)
 plt.ylabel('Charge Density (mV/pixel)', fontsize = 20)
 
+plt.show()
+#%%
+x = [2,3,4,5]
+y1 = [ 0.216, 0.15, 0.147, 0.130]
+y2 = [ 0.965, 0.805, 0.684, 0.614]
+y3 = [ 2.9, 4.2, 5.4, 6.6]
+y4 = [ 3.865, 5.005, 6.084, 7.214]
+
+
+plt.plot(x, y4)
+plt.xlabel('Applied Voltage (V)', fontsize = 18)
+plt.ylabel('Absolute EFM Amplitude (mV)', fontsize = 18)
+plt.title("Absolute EFM Aplitude with different voltages ", fontsize=22)
+plt.show()
+#%%
+plt.plot(x, y2)
+plt.xlabel('Applied Voltage (V)', fontsize = 18)
+plt.ylabel('EFM Amplitude Difference (mV)', fontsize = 18)
+plt.title("EFM Amplitude Difference with different voltages ", fontsize=22)
+plt.show()
+#%%
+plt.plot(x, y1)
+plt.xlabel('Applied Voltage (V)', fontsize = 18)
+plt.ylabel('Distance between peak EFM Aplitude and PF6 rich regions (μm)', fontsize = 18)
+plt.title("Distance between EFM peak and PF6 rich region at different voltages", fontsize=22)
 plt.show()
 
 
